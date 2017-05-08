@@ -32,12 +32,11 @@ def main():
     client.ping()
     print('ping()')
 
-    req = Request()
-    req.ad_id = '1'
-    req.user_id = 'xujiang'
+    req = ItemRequest()
+    req.item_id = '1'
     req.cityName = 'shanghai'
     req.category = 'ershouche'
-    rec_ = client.fetchRec(req)
+    rec_ = client.fetchRecByItem(req)
     print(rec_)
 
 if __name__ == "__main__":
