@@ -21,6 +21,8 @@ class Mongo(metaclass=Singleton):
     def __init__(self, db_name, is_pro=1):
 
         self.db_name = db_name
+        self.read_db = None
+        self.write_db = None
 
         dev_read_uri = 'mongodb://ro:ReadOnly@192.168.1.40:27017'
         dev_write_uri = 'mongodb://admin:SuperPower@192.168.1.40:27017'
@@ -36,7 +38,11 @@ class Mongo(metaclass=Singleton):
             self.write_uri = dev_write_uri
 
     def connect(self):
+        if self.read_db is None or self.write_db is None:
+            self.read_db = MongoClient(self.read_uri)[self.db_name]
+            self.write_db = MongoClient(self.write_uri)[self.db_name]
 
+    def re_connect(self):
         self.read_db = MongoClient(self.read_uri)[self.db_name]
         self.write_db = MongoClient(self.write_uri)[self.db_name]
 
