@@ -38,7 +38,7 @@ class Mongo(metaclass=Singleton):
             self.write_uri = dev_write_uri
 
     def connect(self):
-        if self.read_db is None or self.write_db is None :
+        if self.read_db is None or self.write_db is None:
             self.read_db = MongoClient(self.read_uri)[self.db_name]
             self.write_db = MongoClient(self.write_uri)[self.db_name]
 
