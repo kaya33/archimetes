@@ -1,1 +1,2 @@
-pip
+requests=2.13.0
+thrift=0.10.0
