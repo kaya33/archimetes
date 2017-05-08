@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import sys
+import logging
 
 sys.path.append('./gen-py')
 
@@ -14,6 +15,8 @@ from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
 from src.core.user_profile import fetch_user_profile
 
+logger = logging.getLogger(__name__)
+
 
 class RecommenderHandler(object):
     def __init__(self):
@@ -22,7 +25,7 @@ class RecommenderHandler(object):
     def ping(self):
         print('ping()')
 
-    def fetchRec(self,req):
+    def fetchRecByItem(self,req):
 
         print("get the rec request ...")
         # TODO 调用离线推荐列表数据

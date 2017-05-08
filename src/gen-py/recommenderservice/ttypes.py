@@ -90,10 +90,9 @@ class InvalidOperation(TException):
         return not (self == other)
 
 
-class Request(object):
+class UserRequest(object):
     """
     Attributes:
-     - ad_id
      - user_id
      - cityName
      - category
@@ -101,14 +100,12 @@ class Request(object):
 
     thrift_spec = (
         None,  # 0
-        (1, TType.STRING, 'ad_id', 'UTF8', None, ),  # 1
-        (2, TType.STRING, 'user_id', 'UTF8', None, ),  # 2
-        (3, TType.STRING, 'cityName', 'UTF8', None, ),  # 3
-        (4, TType.STRING, 'category', 'UTF8', None, ),  # 4
+        (1, TType.STRING, 'user_id', 'UTF8', None, ),  # 1
+        (2, TType.STRING, 'cityName', 'UTF8', None, ),  # 2
+        (3, TType.STRING, 'category', 'UTF8', None, ),  # 3
     )
 
-    def __init__(self, ad_id=None, user_id=None, cityName=None, category=None,):
-        self.ad_id = ad_id
+    def __init__(self, user_id=None, cityName=None, category=None,):
         self.user_id = user_id
         self.cityName = cityName
         self.category = category
@@ -124,20 +121,15 @@ class Request(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.ad_id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.user_id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.user_id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 3:
-                if ftype == TType.STRING:
                     self.cityName = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 3:
                 if ftype == TType.STRING:
                     self.category = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -151,27 +143,219 @@ class Request(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
             return
-        oprot.writeStructBegin('Request')
-        if self.ad_id is not None:
-            oprot.writeFieldBegin('ad_id', TType.STRING, 1)
-            oprot.writeString(self.ad_id.encode('utf-8') if sys.version_info[0] == 2 else self.ad_id)
-            oprot.writeFieldEnd()
+        oprot.writeStructBegin('UserRequest')
         if self.user_id is not None:
-            oprot.writeFieldBegin('user_id', TType.STRING, 2)
+            oprot.writeFieldBegin('user_id', TType.STRING, 1)
             oprot.writeString(self.user_id.encode('utf-8') if sys.version_info[0] == 2 else self.user_id)
             oprot.writeFieldEnd()
         if self.cityName is not None:
-            oprot.writeFieldBegin('cityName', TType.STRING, 3)
+            oprot.writeFieldBegin('cityName', TType.STRING, 2)
             oprot.writeString(self.cityName.encode('utf-8') if sys.version_info[0] == 2 else self.cityName)
             oprot.writeFieldEnd()
         if self.category is not None:
-            oprot.writeFieldBegin('category', TType.STRING, 4)
+            oprot.writeFieldBegin('category', TType.STRING, 3)
             oprot.writeString(self.category.encode('utf-8') if sys.version_info[0] == 2 else self.category)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
     def validate(self):
+        if self.user_id is None:
+            raise TProtocolException(message='Required field user_id is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class ItemRequest(object):
+    """
+    Attributes:
+     - item_id
+     - cityName
+     - category
+    """
+
+    thrift_spec = (
+        None,  # 0
+        (1, TType.STRING, 'item_id', 'UTF8', None, ),  # 1
+        (2, TType.STRING, 'cityName', 'UTF8', None, ),  # 2
+        (3, TType.STRING, 'category', 'UTF8', None, ),  # 3
+    )
+
+    def __init__(self, item_id=None, cityName=None, category=None,):
+        self.item_id = item_id
+        self.cityName = cityName
+        self.category = category
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, (self.__class__, self.thrift_spec))
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.item_id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.cityName = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.category = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
+            return
+        oprot.writeStructBegin('ItemRequest')
+        if self.item_id is not None:
+            oprot.writeFieldBegin('item_id', TType.STRING, 1)
+            oprot.writeString(self.item_id.encode('utf-8') if sys.version_info[0] == 2 else self.item_id)
+            oprot.writeFieldEnd()
+        if self.cityName is not None:
+            oprot.writeFieldBegin('cityName', TType.STRING, 2)
+            oprot.writeString(self.cityName.encode('utf-8') if sys.version_info[0] == 2 else self.cityName)
+            oprot.writeFieldEnd()
+        if self.category is not None:
+            oprot.writeFieldBegin('category', TType.STRING, 3)
+            oprot.writeString(self.category.encode('utf-8') if sys.version_info[0] == 2 else self.category)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.item_id is None:
+            raise TProtocolException(message='Required field item_id is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class RecResult(object):
+    """
+    Attributes:
+     - errNum
+     - errStr
+     - data
+    """
+
+    thrift_spec = (
+        None,  # 0
+        (1, TType.I32, 'errNum', None, None, ),  # 1
+        (2, TType.STRING, 'errStr', 'UTF8', None, ),  # 2
+        (3, TType.LIST, 'data', (TType.MAP, (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), False), None, ),  # 3
+    )
+
+    def __init__(self, errNum=None, errStr=None, data=None,):
+        self.errNum = errNum
+        self.errStr = errStr
+        self.data = data
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, (self.__class__, self.thrift_spec))
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.errNum = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.errStr = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.data = []
+                    (_etype3, _size0) = iprot.readListBegin()
+                    for _i4 in range(_size0):
+                        _elem5 = {}
+                        (_ktype7, _vtype8, _size6) = iprot.readMapBegin()
+                        for _i10 in range(_size6):
+                            _key11 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val12 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _elem5[_key11] = _val12
+                        iprot.readMapEnd()
+                        self.data.append(_elem5)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
+            return
+        oprot.writeStructBegin('RecResult')
+        if self.errNum is not None:
+            oprot.writeFieldBegin('errNum', TType.I32, 1)
+            oprot.writeI32(self.errNum)
+            oprot.writeFieldEnd()
+        if self.errStr is not None:
+            oprot.writeFieldBegin('errStr', TType.STRING, 2)
+            oprot.writeString(self.errStr.encode('utf-8') if sys.version_info[0] == 2 else self.errStr)
+            oprot.writeFieldEnd()
+        if self.data is not None:
+            oprot.writeFieldBegin('data', TType.LIST, 3)
+            oprot.writeListBegin(TType.MAP, len(self.data))
+            for iter13 in self.data:
+                oprot.writeMapBegin(TType.STRING, TType.STRING, len(iter13))
+                for kiter14, viter15 in iter13.items():
+                    oprot.writeString(kiter14.encode('utf-8') if sys.version_info[0] == 2 else kiter14)
+                    oprot.writeString(viter15.encode('utf-8') if sys.version_info[0] == 2 else viter15)
+                oprot.writeMapEnd()
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.errNum is None:
+            raise TProtocolException(message='Required field errNum is unset!')
+        if self.errStr is None:
+            raise TProtocolException(message='Required field errStr is unset!')
+        if self.data is None:
+            raise TProtocolException(message='Required field data is unset!')
         return
 
     def __repr__(self):

@@ -18,13 +18,18 @@ struct ItemRequest {
     3: optional string category
 }
 
+struct RecResult {
+    1: required i32 errNum;
+    2: required string errStr;
+    3: required list<map<string,string>> data
+}
 
 service Recommender {
 
    void ping(),
 
-    fetchRecByItem(1:ItemRequest req) throws (1:InvalidOperation ouch)
+   RecResult fetchRecByItem(1:ItemRequest req) throws (1:InvalidOperation ouch);
 
-   list<>
+   RecResult fetchRecByUser(1:UserRequest req) throws (1:InvalidOperation ouch)
 
 }
