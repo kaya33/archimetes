@@ -6,11 +6,16 @@ exception InvalidOperation {
   2: string why
 }
 
-struct Request {
-    1: optional string ad_id;
-    2: optional string user_id;
-    3: optional string cityName;
-    4: optional string category
+struct UserRequest {
+    1: required string user_id;
+    2: optional string cityName;
+    3: optional string category
+}
+
+struct ItemRequest {
+    1: required string item_id;
+    2: optional string cityName;
+    3: optional string category
 }
 
 
@@ -18,6 +23,8 @@ service Recommender {
 
    void ping(),
 
-   list<string> fetchRec(1:Request req) throws (1:InvalidOperation ouch)
+    fetchRecByItem(1:ItemRequest req) throws (1:InvalidOperation ouch)
+
+   list<>
 
 }

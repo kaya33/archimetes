@@ -12,6 +12,7 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
+from src.core.user_profile import fetch_user_profile
 
 
 class RecommenderHandler(object):
@@ -26,8 +27,10 @@ class RecommenderHandler(object):
         print("get the rec request ...")
         # TODO 调用离线推荐列表数据
 
+
         # TODO 调用用户画像数据
-        return [req.ad_id,req.user_id, req.cityName, req.category]
+
+        return fetch_user_profile()
 
 def main():
     handler = RecommenderHandler()
