@@ -24,9 +24,9 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] [-s[sl]] [-novalidate] [-ca_certs certs] [-keyfile keyfile] [-certfile certfile] function [arg1 [arg2...]]')
     print('')
     print('Functions:')
-    print('  void ping()')
-    print('  RecResult fetchRecByItem(ItemRequest req)')
-    print('  RecResult fetchRecByUser(UserRequest req)')
+    print('  string ping()')
+    print('  RecResponse fetchRecByItem(ItemRequest req)')
+    print('  RecResponse fetchRecByUser(UserRequest req)')
     print('')
     sys.exit(0)
 
