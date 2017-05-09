@@ -1,15 +1,12 @@
-/**
- * Structs can also be exceptions, if they are nasty.
- */
+
 exception InvalidOperation {
   1: i32 whatOp,
   2: string why
 }
 
-struct UserRequest {
-    1: required string user_id;
-    2: optional string cityName;
-    3: optional string category
+enum responseType {
+	OK = 1,
+	ERROR
 }
 
 struct ItemRequest {
@@ -18,18 +15,23 @@ struct ItemRequest {
     3: optional string category
 }
 
-struct RecResult {
-    1: required i32 errNum;
-    2: required string errStr;
-    3: required list<map<string,string>> data
+struct UserRequest {
+    1: required string user_id;
+    2: optional string cityName;
+    3: optional string category
+}
+
+struct RecResponse {
+	1: required responseType status;
+	2: required string errStr;
+	3: required list<map<string,string>> data
 }
 
 service Recommender {
 
-   void ping(),
+   string ping(),
 
-   RecResult fetchRecByItem(1:ItemRequest req) throws (1:InvalidOperation ouch);
+   RecResponse fetchRecByItem(1:ItemRequest req);
 
-   RecResult fetchRecByUser(1:UserRequest req) throws (1:InvalidOperation ouch)
-
+   RecResponse fetchRecByUser(1:UserRequest req)
 }

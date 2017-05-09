@@ -43,7 +43,7 @@ class Client(Iface):
 
     def ping(self):
         self.send_ping()
-        self.recv_ping()
+        return self.recv_ping()
 
     def send_ping(self):
         self._oprot.writeMessageBegin('ping', TMessageType.CALL, self._seqid)
@@ -63,7 +63,9 @@ class Client(Iface):
         result = ping_result()
         result.read(iprot)
         iprot.readMessageEnd()
-        return
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "ping failed: unknown result")
 
     def fetchRecByItem(self, req):
         """
@@ -94,8 +96,6 @@ class Client(Iface):
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        if result.ouch is not None:
-            raise result.ouch
         raise TApplicationException(TApplicationException.MISSING_RESULT, "fetchRecByItem failed: unknown result")
 
     def fetchRecByUser(self, req):
@@ -127,8 +127,6 @@ class Client(Iface):
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        if result.ouch is not None:
-            raise result.ouch
         raise TApplicationException(TApplicationException.MISSING_RESULT, "fetchRecByUser failed: unknown result")
 
 
@@ -161,7 +159,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = ping_result()
         try:
-            self._handler.ping()
+            result.success = self._handler.ping()
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
@@ -184,9 +182,6 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
-        except InvalidOperation as ouch:
-            msg_type = TMessageType.REPLY
-            result.ouch = ouch
         except Exception as ex:
             msg_type = TMessageType.EXCEPTION
             logging.exception(ex)
@@ -206,9 +201,6 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
-        except InvalidOperation as ouch:
-            msg_type = TMessageType.REPLY
-            result.ouch = ouch
         except Exception as ex:
             msg_type = TMessageType.EXCEPTION
             logging.exception(ex)
@@ -264,9 +256,17 @@ class ping_args(object):
 
 
 class ping_result(object):
+    """
+    Attributes:
+     - success
+    """
 
     thrift_spec = (
+        (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
     )
+
+    def __init__(self, success=None,):
+        self.success = success
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -277,6 +277,11 @@ class ping_result(object):
             (fname, ftype, fid) = iprot.readFieldBegin()
             if ftype == TType.STOP:
                 break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -287,6 +292,10 @@ class ping_result(object):
             oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
             return
         oprot.writeStructBegin('ping_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -370,17 +379,14 @@ class fetchRecByItem_result(object):
     """
     Attributes:
      - success
-     - ouch
     """
 
     thrift_spec = (
-        (0, TType.STRUCT, 'success', (RecResult, RecResult.thrift_spec), None, ),  # 0
-        (1, TType.STRUCT, 'ouch', (InvalidOperation, InvalidOperation.thrift_spec), None, ),  # 1
+        (0, TType.STRUCT, 'success', (RecResponse, RecResponse.thrift_spec), None, ),  # 0
     )
 
-    def __init__(self, success=None, ouch=None,):
+    def __init__(self, success=None,):
         self.success = success
-        self.ouch = ouch
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -393,14 +399,8 @@ class fetchRecByItem_result(object):
                 break
             if fid == 0:
                 if ftype == TType.STRUCT:
-                    self.success = RecResult()
+                    self.success = RecResponse()
                     self.success.read(iprot)
-                else:
-                    iprot.skip(ftype)
-            elif fid == 1:
-                if ftype == TType.STRUCT:
-                    self.ouch = InvalidOperation()
-                    self.ouch.read(iprot)
                 else:
                     iprot.skip(ftype)
             else:
@@ -416,10 +416,6 @@ class fetchRecByItem_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRUCT, 0)
             self.success.write(oprot)
-            oprot.writeFieldEnd()
-        if self.ouch is not None:
-            oprot.writeFieldBegin('ouch', TType.STRUCT, 1)
-            self.ouch.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -504,17 +500,14 @@ class fetchRecByUser_result(object):
     """
     Attributes:
      - success
-     - ouch
     """
 
     thrift_spec = (
-        (0, TType.STRUCT, 'success', (RecResult, RecResult.thrift_spec), None, ),  # 0
-        (1, TType.STRUCT, 'ouch', (InvalidOperation, InvalidOperation.thrift_spec), None, ),  # 1
+        (0, TType.STRUCT, 'success', (RecResponse, RecResponse.thrift_spec), None, ),  # 0
     )
 
-    def __init__(self, success=None, ouch=None,):
+    def __init__(self, success=None,):
         self.success = success
-        self.ouch = ouch
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -527,14 +520,8 @@ class fetchRecByUser_result(object):
                 break
             if fid == 0:
                 if ftype == TType.STRUCT:
-                    self.success = RecResult()
+                    self.success = RecResponse()
                     self.success.read(iprot)
-                else:
-                    iprot.skip(ftype)
-            elif fid == 1:
-                if ftype == TType.STRUCT:
-                    self.ouch = InvalidOperation()
-                    self.ouch.read(iprot)
                 else:
                     iprot.skip(ftype)
             else:
@@ -550,10 +537,6 @@ class fetchRecByUser_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRUCT, 0)
             self.success.write(oprot)
-            oprot.writeFieldEnd()
-        if self.ouch is not None:
-            oprot.writeFieldBegin('ouch', TType.STRUCT, 1)
-            self.ouch.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
