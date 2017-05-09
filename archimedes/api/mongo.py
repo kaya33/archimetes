@@ -13,10 +13,10 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class Mongo(metaclass=Singleton):
+class Mongo():
 
     # python2 metaclass
-    # __metaclass__ = Singleton
+    __metaclass__ = Singleton
 
     def __init__(self, db_name, is_pro=1):
 
@@ -24,8 +24,8 @@ class Mongo(metaclass=Singleton):
         self.read_db = None
         self.write_db = None
 
-        dev_read_uri = 'mongodb://ro:ReadOnly@192.168.1.40:27017'
-        dev_write_uri = 'mongodb://admin:SuperPower@192.168.1.40:27017'
+        dev_read_uri = 'mongodb://ro:ReadOnly@127.0.0.1:27017'
+        dev_write_uri = 'mongodb://admin:SuperPower@127.0.0.1:27017'
         pro_read_uri = 'mongodb://ro:ReadOnly@192.168.1.40:27017'
         pro_write_uri = 'mongodb://admin:SuperPower@192.168.1.40:27017'
 
