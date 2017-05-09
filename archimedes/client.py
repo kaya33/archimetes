@@ -6,6 +6,9 @@ import os
 import sys
 
 sys.path.append('gen-py')
+sys.path.insert(0, os.path.abspath('..'))
+
+from archimedes import logger
 
 from recommenderservice import Recommender
 from recommenderservice.ttypes import *
@@ -14,6 +17,8 @@ from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TCompactProtocol
+
+logger = logger.getLogger(__name__)
 
 
 # Add classes / functions as required here
@@ -32,7 +37,7 @@ def getRecServerPort(config_path):
     with open(config_path, 'r') as conffile:
         lines = conffile.readlines()
         for line in lines:
-            if 'recamendationAd' in line:
+            if 'recomendationAd' in line:
                 # Important to make port as an integer
                 return int(line.split()[1].lstrip().rstrip())
 
@@ -74,7 +79,7 @@ def fetchRecByItem(sock, req):
       print("ERROR")
     if resp.status == responseType.OK:
       #print "Deletion of block successful"
-      print("OK")
+      logger.info("OK")
     else:
       #print "Deletion of block not successful"
       print("ERROR")
@@ -99,7 +104,7 @@ def main():
     print(res_)
 
     req = ItemRequest()
-    req.item_id = '1024694347'
+    req.item_id = item_id
     print(req)
     rec_ = fetchRecByItem(sock, req)
 
