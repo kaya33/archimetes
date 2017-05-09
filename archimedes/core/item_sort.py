@@ -3,4 +3,12 @@
 
 __author__ = 'xujiang@baixing.com'
 
-def simple_order(list_a, list_b):
+from collections import Counter
+
+def sample_sort(x, y):
+    """
+    :param x: [{},{}]
+    :param y: [{},{}]
+    :return: 
+    """
+
