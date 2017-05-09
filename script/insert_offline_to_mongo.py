@@ -1,6 +1,6 @@
 import json
 
-from src.api.mongo import Mongo
+from archimedes.api.mongo import Mongo
 
 with open('test', 'r')as f:
     data = f.read().split('\n')
