@@ -13,10 +13,10 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class Mongo(metaclass=Singleton):
+class Mongo():
 
     # python2 metaclass
-    # __metaclass__ = Singleton
+    __metaclass__ = Singleton
 
     def __init__(self, db_name, is_pro=1):
 
