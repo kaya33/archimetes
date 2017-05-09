@@ -17,6 +17,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo import Mongo
 
+
 logger = logging.getLogger(__name__)
 
 mongo = Mongo('chaoge')
@@ -54,7 +55,7 @@ class RecommenderServerHandler(object):
         with open(self.config_path, 'r') as conffile:
             lines = conffile.readlines()
             for line in lines:
-                if 'recamendationAd' in line:
+                if 'recomendationAd' in line:
                     # Important to make port as an integer
                     return int(line.split()[1].lstrip().rstrip())
 
