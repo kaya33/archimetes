@@ -97,6 +97,48 @@ class RecommenderServerHandler(object):
         except Exception as e:
             log.error(e)
 
+    def fetchRecByUser(self,req):
+        print(req)
+        print("get the rec response by item ...")
+
+        res = RecResponse()
+        res.status = responseType.OK
+        res.errStr = ""
+        res.data = []
+        try:
+        # TODO 调用离线推荐列表数据
+            if req.ad_id is None:
+                res.status = responseType.ERROR;
+                res.errStr = "ad_id不能为空"
+                res.data = []
+                return res
+
+            ad_id = req.ad_id
+
+            if req.size>0:
+                size = req.size
+            else:
+                size = 3
+
+
+            data = fetch_batch_itemrec(ad_id.encode('utf-8'))
+            # TODO 调用用户画像数据
+
+            # TODO 排序
+            combine_data = sample_sort(data)
+            print combine_data
+
+            # TODO 过滤
+
+            for sub in combine_data:
+                for key in sub:
+                    sub[key] = str(sub[key])
+            res.data.extend(combine_data[:size])
+
+            return res
+        except Exception as e:
+            log.error(e)
+
 def main():
 
     log.info("Initializing recamendation server")
