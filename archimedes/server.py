@@ -84,7 +84,7 @@ class RecommenderServerHandler(object):
 
             # TODO 排序
             combine_data = sample_sort(data)
-            print(combine_data)
+            print combine_data
 
             # TODO 过滤
 
