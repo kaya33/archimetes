@@ -24,8 +24,8 @@ class Mongo():
         self.read_db = None
         self.write_db = None
 
-        dev_read_uri = 'mongodb://ro:ReadOnly@127.0.0.1:27017'
-        dev_write_uri = 'mongodb://admin:SuperPower@127.0.0.1:27017'
+        dev_read_uri = 'mongodb://127.0.0.1:27017'
+        dev_write_uri = 'mongodb://127.0.0.1:27017'
         pro_read_uri = 'mongodb://ro:ReadOnly@192.168.1.40:27017'
         pro_write_uri = 'mongodb://admin:SuperPower@192.168.1.40:27017'
 
@@ -66,9 +66,6 @@ class Mongo():
         return result.inserted_ids
 
     def delete(self, collect_name, search_json={}):
-
-        if len(search_json) == 0:
-            return []
 
         result = self.write_db[collect_name].remove(search_json)
         return 'success'
