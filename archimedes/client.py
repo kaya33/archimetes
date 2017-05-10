@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*-coding:utf-8-*-
 
+__author__ = 'xujiang@baixing.com'
 
 import os
 import sys
@@ -17,33 +18,22 @@ from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TCompactProtocol
+from conf.config_default import configs
 
-logger = logger.getLogger(__name__)
+log = logger.getLogger(__name__)
 
 
 # Add classes / functions as required here
-def getRecServerPort(config_path):
-    # This function reads config file and gets the port for block server
-
-    #print "Checking validity of the config path"
-    if not os.path.exists(config_path):
-        print("ERROR: Config path is invalid")
-        exit(1)
-    if not os.path.isfile(config_path):
-        print("ERROR: Config path is not a file")
-        exit(1)
-
-    #print "Reading config file"
-    with open(config_path, 'r') as conffile:
-        lines = conffile.readlines()
-        for line in lines:
-            if 'recomendationAd' in line:
-                # Important to make port as an integer
-                return int(line.split()[1].lstrip().rstrip())
-
+def getRecServerPort():
+    # In this function read the configuration file and get the port number for the server
+    log.info("Get the server port by config file")
+    try:
+        port = int(configs.get('server').get('port', 9090))
+        return port
     # Exit if you did not get blockserver information
-    print("ERROR: recommendationAd server information not found in config file")
-    exit(1)
+    except Exception as e:
+        log.error("cannot read server port.")
+        exit(1)
 
 
 def getRecServerSocket(port):
@@ -63,8 +53,7 @@ def getRecServerSocket(port):
     try:
         transport.open()
     except Exception as e:
-        print("ERROR: Exception while connecting to block server, check if server is running on port", port)
-        print(e)
+        log.error("Exception while connecting to block server, check if server is running on port", port)
         exit(1)
 
     return client
@@ -74,38 +63,37 @@ def fetchRecByItem(sock, req):
       resp = sock.fetchRecByItem(req)
       print(resp)
     except Exception as e:
-      print("ERROR while calling fetchRecByItem")
-      print(e)
+      log.error("ERROR while calling fetchRecByItem")
+      log.error(e)
       print("ERROR")
     if resp.status == responseType.OK:
       #print "Deletion of block successful"
-      logger.info("OK")
+      log.info("OK")
     else:
       #print "Deletion of block not successful"
-      print("ERROR")
+      log.error("ERROR")
    # else:
        # print "Server said ERROR,  Meta server get list unsuccessful"
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Invocation : <executable> <config_file> <command> <item_id>")
+    if len(sys.argv) < 2:
+        log.error("Invocation : <executable> <config_file> <command> <item_id>")
         exit(-1)
-    config_path = sys.argv[1]
-    command = sys.argv[2]
-    item_id = sys.argv[3]
+    command = sys.argv[1]
+    ad_id = sys.argv[2]
 
     # Make socket
-    servPort = getRecServerPort(config_path)
+    servPort = getRecServerPort()
     sock = getRecServerSocket(servPort)
     # Wrap in a protocol
 
     res_ = sock.ping()
-    print(res_)
+    log.info(res_)
 
     req = ItemRequest()
-    req.item_id = item_id
-    print(req)
+    req.ad_id = ad_id
+    req.size = 4
     rec_ = fetchRecByItem(sock, req)
 
     print(rec_)

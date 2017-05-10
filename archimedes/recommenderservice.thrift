@@ -10,15 +10,17 @@ enum responseType {
 }
 
 struct ItemRequest {
-    1: required string item_id;
+    1: required string ad_id;
     2: optional string cityName;
-    3: optional string category
+    3: optional string category;
+    4: optional i32 size
 }
 
 struct UserRequest {
     1: required string user_id;
     2: optional string cityName;
-    3: optional string category
+    3: optional string category;
+    4: optional i32 size
 }
 
 struct RecResponse {
