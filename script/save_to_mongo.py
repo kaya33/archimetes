@@ -1,45 +1,24 @@
 import hashlib
 import threading
-import queue
-import requests
 import datetime
 import json
 import time
 import sys
 import re
 import subprocess
-
-from gevent import monkey;monkey.patch_socket()
 import gevent
 
-SHARE_Q = queue.Queue()  #构造一个不限制大小的的队列
-_WORKER_THREAD_NUM = 3   #设置线程个数
+from datetime import datetime
+from pymongo import MongoClient
 
-def request_post(url, data):
-    try:
-        return requests.post(url=url, data=data).text
-    except Exception:
-        return 'not ok'
+client = MongoClient()
+db = client.chaoge
 
-def send_to_api(data_dict):
-    m = hashlib.md5()
-    #url = 'http://www.baixing.com/p/juheapi.php?action={0}&token={1}'
-    url = 'http://xujiang.baixing.cn/p/recapi.php?action={0}&token={1}'
-    if data_dict == []:
-        return
-    if len(data_dict) > 100:
-        return
-    action = 'updateREC'
-    #body = str(data_dict)
-    salt = 'xujiang'
-    body = json.dumps(data_dict, ensure_ascii=False)
-    m.update((action + body + salt).encode('utf-8'))
-    token = m.hexdigest()
-    try:
-        post_request = requests.post(url=url.format(action, token), data=body.encode('utf-8'))
-        print(post_request.text)
-    except Exception as e:
-        print(e)
+
+def insert_api(data):
+    print data
+    db.RecommendationAd.insert(data)
+
 
 def process_row(raw_data):
     tmp_data = dict()
@@ -52,11 +31,10 @@ def process_row(raw_data):
     except Exception as e:
         print(e)
         return []
-    tmp_data['rec_id'] = id
-    tmp_data['rec_name'] = rec_name
-    tmp_data['id_type'] = id_type
-    tmp_data['ads'] = value_list
+    tmp_data['_id'] = "{}&{}&{}".format(id,rec_name, id_type)
+    tmp_data['ads'] = value_list[100]
     return tmp_data
+
 
 def read_hdfs_and_send(url):
     """
@@ -78,7 +56,7 @@ def read_hdfs_and_send(url):
                 tmp_100_data.append(tmp_process_row)
 
             if len(tmp_100_data) > 99:
-                ge_100_list.append(gevent.spawn(send_to_api, tmp_100_data[:]))
+                ge_100_list.append(gevent.spawn(insert_api, tmp_100_data[:]))
                 tmp_100_data = []
 
             if len(ge_100_list) > 2:
@@ -86,7 +64,7 @@ def read_hdfs_and_send(url):
                 ge_100_list = list()
 
         if len(tmp_100_data) > 0:
-            ge_100_list.append(gevent.spawn(send_to_api, tmp_100_data[:]))
+            ge_100_list.append(gevent.spawn(insert_api, tmp_100_data[:]))
 
         if len(ge_100_list) > 0:
             gevent.joinall(ge_100_list)
