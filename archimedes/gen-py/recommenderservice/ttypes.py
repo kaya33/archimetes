@@ -106,22 +106,25 @@ class InvalidOperation(TException):
 class ItemRequest(object):
     """
     Attributes:
-     - item_id
+     - ad_id
      - cityName
      - category
+     - size
     """
 
     thrift_spec = (
         None,  # 0
-        (1, TType.STRING, 'item_id', 'UTF8', None, ),  # 1
+        (1, TType.STRING, 'ad_id', 'UTF8', None, ),  # 1
         (2, TType.STRING, 'cityName', 'UTF8', None, ),  # 2
         (3, TType.STRING, 'category', 'UTF8', None, ),  # 3
+        (4, TType.I32, 'size', None, None, ),  # 4
     )
 
-    def __init__(self, item_id=None, cityName=None, category=None,):
-        self.item_id = item_id
+    def __init__(self, ad_id=None, cityName=None, category=None, size=None,):
+        self.ad_id = ad_id
         self.cityName = cityName
         self.category = category
+        self.size = size
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -134,7 +137,7 @@ class ItemRequest(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.item_id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.ad_id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
@@ -147,6 +150,11 @@ class ItemRequest(object):
                     self.category = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I32:
+                    self.size = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -157,9 +165,9 @@ class ItemRequest(object):
             oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
             return
         oprot.writeStructBegin('ItemRequest')
-        if self.item_id is not None:
-            oprot.writeFieldBegin('item_id', TType.STRING, 1)
-            oprot.writeString(self.item_id.encode('utf-8') if sys.version_info[0] == 2 else self.item_id)
+        if self.ad_id is not None:
+            oprot.writeFieldBegin('ad_id', TType.STRING, 1)
+            oprot.writeString(self.ad_id.encode('utf-8') if sys.version_info[0] == 2 else self.ad_id)
             oprot.writeFieldEnd()
         if self.cityName is not None:
             oprot.writeFieldBegin('cityName', TType.STRING, 2)
@@ -169,12 +177,16 @@ class ItemRequest(object):
             oprot.writeFieldBegin('category', TType.STRING, 3)
             oprot.writeString(self.category.encode('utf-8') if sys.version_info[0] == 2 else self.category)
             oprot.writeFieldEnd()
+        if self.size is not None:
+            oprot.writeFieldBegin('size', TType.I32, 4)
+            oprot.writeI32(self.size)
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
     def validate(self):
-        if self.item_id is None:
-            raise TProtocolException(message='Required field item_id is unset!')
+        if self.ad_id is None:
+            raise TProtocolException(message='Required field ad_id is unset!')
         return
 
     def __repr__(self):
@@ -195,6 +207,7 @@ class UserRequest(object):
      - user_id
      - cityName
      - category
+     - size
     """
 
     thrift_spec = (
@@ -202,12 +215,14 @@ class UserRequest(object):
         (1, TType.STRING, 'user_id', 'UTF8', None, ),  # 1
         (2, TType.STRING, 'cityName', 'UTF8', None, ),  # 2
         (3, TType.STRING, 'category', 'UTF8', None, ),  # 3
+        (4, TType.I32, 'size', None, None, ),  # 4
     )
 
-    def __init__(self, user_id=None, cityName=None, category=None,):
+    def __init__(self, user_id=None, cityName=None, category=None, size=None,):
         self.user_id = user_id
         self.cityName = cityName
         self.category = category
+        self.size = size
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -233,6 +248,11 @@ class UserRequest(object):
                     self.category = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I32:
+                    self.size = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -254,6 +274,10 @@ class UserRequest(object):
         if self.category is not None:
             oprot.writeFieldBegin('category', TType.STRING, 3)
             oprot.writeString(self.category.encode('utf-8') if sys.version_info[0] == 2 else self.category)
+            oprot.writeFieldEnd()
+        if self.size is not None:
+            oprot.writeFieldBegin('size', TType.I32, 4)
+            oprot.writeI32(self.size)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
