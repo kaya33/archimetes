@@ -1,4 +1,4 @@
-from archimedes.api.mongo import Mongo
+from archimedes.api.mongo_base import Mongo
 
 mongo  = Mongo('chaoge')
 

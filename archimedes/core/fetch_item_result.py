@@ -1,6 +1,6 @@
 import json
 from pprint import pprint
-from ..api import mongo
+from ..api import mongo_base
 
 from archimedes.utils.parse_json import list_all_dict,get_all_keywd
 from archimedes.data.base_data_source import fetchKwData

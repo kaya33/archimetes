@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import pymongo
+import json
 from pymongo import MongoClient
 
 
@@ -24,10 +25,12 @@ class Mongo():
         self.read_db = None
         self.write_db = None
 
-        dev_read_uri = 'mongodb://127.0.0.1:27017'
-        dev_write_uri = 'mongodb://127.0.0.1:27017'
-        pro_read_uri = 'mongodb://ro:ReadOnly@192.168.1.40:27017'
-        pro_write_uri = 'mongodb://admin:SuperPower@192.168.1.40:27017'
+        conf = json.load(open('conf/mongo_conf.json'))
+
+        dev_read_uri = conf['dev_read_uri']
+        dev_write_uri = conf['dev_write_uri']
+        pro_read_uri = conf['pro_read_uri']
+        pro_write_uri = conf['pro_write_uri']
 
         if is_pro:
             self.read_uri = pro_read_uri
@@ -42,7 +45,12 @@ class Mongo():
             self.read_db = MongoClient(self.read_uri)[self.db_name]
             self.write_db = MongoClient(self.write_uri)[self.db_name]
 
-    def re_connect(self):
+    def reconnect(self):
+        # release
+        try:
+            self.close_connect()
+        except:
+            pass
         self.read_db = MongoClient(self.read_uri)[self.db_name]
         self.write_db = MongoClient(self.write_uri)[self.db_name]
 
@@ -86,6 +94,7 @@ def test():
     print(a is b)
     print(id(a))
     print(id(b))
+    print a.test()
     # print(a.read('RecommendationAd').next())
     # print([x for x in a.insert('RecommendationUserTagsOffline', [{'user_id': '3a64b7666eca18fa',
     #                                                              'tags': {u"服务": {u"家电维修": {u"空调维修": 2, u"葫芦岛": 2}}}}])])

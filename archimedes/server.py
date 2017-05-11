@@ -20,11 +20,10 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
-from api.mongo import Mongo
+from api.mongo_base import Mongo\
 from core.combine_sort import sample_sort
 from conf.config_default import configs
 from core.fetch_item_result import fetch_batch_userrec,fetch_batch_itemrec,fetchKwData
-
 
 
 log = logger.getLogger(__name__)
