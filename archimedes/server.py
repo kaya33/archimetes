@@ -23,13 +23,16 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
-from api.mongo import Mongo
+from api.mongo_base import Mongo\
 from core.combine_sort import sample_sort
 from conf.config_default import configs
 
+<<<<<<< HEAD
 from utils.parse_json import get_all_keywd
 from data.base_data_source import fetchKwData
 
+=======
+>>>>>>> 04afef6d6992e84d29167007a414605f33501796
 log = logger.getLogger(__name__)
 
 reload(sys)
