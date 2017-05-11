@@ -14,5 +14,6 @@ def fetchRecData():
     for doc in many_docs:
         pprint.pprint(many_docs)
 
+
 if __name__ == "__main__":
     fetchRecData()
