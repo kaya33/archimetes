@@ -15,34 +15,34 @@ from thrift.transport import TTransport
 
 class responseType(object):
     OK = 1
-    ERROR = 2
+    ERROR = 0
 
     _VALUES_TO_NAMES = {
         1: "OK",
-        2: "ERROR",
+        0: "ERROR",
     }
 
     _NAMES_TO_VALUES = {
         "OK": 1,
-        "ERROR": 2,
+        "ERROR": 0,
     }
 
 
 class InvalidOperation(TException):
     """
     Attributes:
-     - whatOp
+     - what_op
      - why
     """
 
     thrift_spec = (
         None,  # 0
-        (1, TType.I32, 'whatOp', None, None, ),  # 1
+        (1, TType.I32, 'what_op', None, None, ),  # 1
         (2, TType.STRING, 'why', 'UTF8', None, ),  # 2
     )
 
-    def __init__(self, whatOp=None, why=None,):
-        self.whatOp = whatOp
+    def __init__(self, what_op=None, why=None,):
+        self.what_op = what_op
         self.why = why
 
     def read(self, iprot):
@@ -56,7 +56,7 @@ class InvalidOperation(TException):
                 break
             if fid == 1:
                 if ftype == TType.I32:
-                    self.whatOp = iprot.readI32()
+                    self.what_op = iprot.readI32()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
@@ -74,9 +74,9 @@ class InvalidOperation(TException):
             oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
             return
         oprot.writeStructBegin('InvalidOperation')
-        if self.whatOp is not None:
-            oprot.writeFieldBegin('whatOp', TType.I32, 1)
-            oprot.writeI32(self.whatOp)
+        if self.what_op is not None:
+            oprot.writeFieldBegin('what_op', TType.I32, 1)
+            oprot.writeI32(self.what_op)
             oprot.writeFieldEnd()
         if self.why is not None:
             oprot.writeFieldBegin('why', TType.STRING, 2)
@@ -107,23 +107,23 @@ class ItemRequest(object):
     """
     Attributes:
      - ad_id
-     - cityName
-     - category
+     - city_name
+     - category_name
      - size
     """
 
     thrift_spec = (
         None,  # 0
         (1, TType.STRING, 'ad_id', 'UTF8', None, ),  # 1
-        (2, TType.STRING, 'cityName', 'UTF8', None, ),  # 2
-        (3, TType.STRING, 'category', 'UTF8', None, ),  # 3
+        (2, TType.STRING, 'city_name', 'UTF8', None, ),  # 2
+        (3, TType.STRING, 'category_name', 'UTF8', None, ),  # 3
         (4, TType.I32, 'size', None, None, ),  # 4
     )
 
-    def __init__(self, ad_id=None, cityName=None, category=None, size=None,):
+    def __init__(self, ad_id=None, city_name=None, category_name=None, size=None,):
         self.ad_id = ad_id
-        self.cityName = cityName
-        self.category = category
+        self.city_name = city_name
+        self.category_name = category_name
         self.size = size
 
     def read(self, iprot):
@@ -142,12 +142,12 @@ class ItemRequest(object):
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.cityName = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.city_name = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.STRING:
-                    self.category = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.category_name = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
@@ -169,13 +169,13 @@ class ItemRequest(object):
             oprot.writeFieldBegin('ad_id', TType.STRING, 1)
             oprot.writeString(self.ad_id.encode('utf-8') if sys.version_info[0] == 2 else self.ad_id)
             oprot.writeFieldEnd()
-        if self.cityName is not None:
-            oprot.writeFieldBegin('cityName', TType.STRING, 2)
-            oprot.writeString(self.cityName.encode('utf-8') if sys.version_info[0] == 2 else self.cityName)
+        if self.city_name is not None:
+            oprot.writeFieldBegin('city_name', TType.STRING, 2)
+            oprot.writeString(self.city_name.encode('utf-8') if sys.version_info[0] == 2 else self.city_name)
             oprot.writeFieldEnd()
-        if self.category is not None:
-            oprot.writeFieldBegin('category', TType.STRING, 3)
-            oprot.writeString(self.category.encode('utf-8') if sys.version_info[0] == 2 else self.category)
+        if self.category_name is not None:
+            oprot.writeFieldBegin('category_name', TType.STRING, 3)
+            oprot.writeString(self.category_name.encode('utf-8') if sys.version_info[0] == 2 else self.category_name)
             oprot.writeFieldEnd()
         if self.size is not None:
             oprot.writeFieldBegin('size', TType.I32, 4)
@@ -205,23 +205,26 @@ class UserRequest(object):
     """
     Attributes:
      - user_id
-     - cityName
-     - category
+     - city_name
+     - first_cat
+     - second_cat
      - size
     """
 
     thrift_spec = (
         None,  # 0
         (1, TType.STRING, 'user_id', 'UTF8', None, ),  # 1
-        (2, TType.STRING, 'cityName', 'UTF8', None, ),  # 2
-        (3, TType.STRING, 'category', 'UTF8', None, ),  # 3
-        (4, TType.I32, 'size', None, None, ),  # 4
+        (2, TType.STRING, 'city_name', 'UTF8', None, ),  # 2
+        (3, TType.STRING, 'first_cat', 'UTF8', None, ),  # 3
+        (4, TType.STRING, 'second_cat', 'UTF8', None, ),  # 4
+        (5, TType.I32, 'size', None, None, ),  # 5
     )
 
-    def __init__(self, user_id=None, cityName=None, category=None, size=None,):
+    def __init__(self, user_id=None, city_name=None, first_cat=None, second_cat=None, size=None,):
         self.user_id = user_id
-        self.cityName = cityName
-        self.category = category
+        self.city_name = city_name
+        self.first_cat = first_cat
+        self.second_cat = second_cat
         self.size = size
 
     def read(self, iprot):
@@ -240,15 +243,20 @@ class UserRequest(object):
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.cityName = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.city_name = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.STRING:
-                    self.category = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.first_cat = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
+                if ftype == TType.STRING:
+                    self.second_cat = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
                 if ftype == TType.I32:
                     self.size = iprot.readI32()
                 else:
@@ -267,16 +275,20 @@ class UserRequest(object):
             oprot.writeFieldBegin('user_id', TType.STRING, 1)
             oprot.writeString(self.user_id.encode('utf-8') if sys.version_info[0] == 2 else self.user_id)
             oprot.writeFieldEnd()
-        if self.cityName is not None:
-            oprot.writeFieldBegin('cityName', TType.STRING, 2)
-            oprot.writeString(self.cityName.encode('utf-8') if sys.version_info[0] == 2 else self.cityName)
+        if self.city_name is not None:
+            oprot.writeFieldBegin('city_name', TType.STRING, 2)
+            oprot.writeString(self.city_name.encode('utf-8') if sys.version_info[0] == 2 else self.city_name)
             oprot.writeFieldEnd()
-        if self.category is not None:
-            oprot.writeFieldBegin('category', TType.STRING, 3)
-            oprot.writeString(self.category.encode('utf-8') if sys.version_info[0] == 2 else self.category)
+        if self.first_cat is not None:
+            oprot.writeFieldBegin('first_cat', TType.STRING, 3)
+            oprot.writeString(self.first_cat.encode('utf-8') if sys.version_info[0] == 2 else self.first_cat)
+            oprot.writeFieldEnd()
+        if self.second_cat is not None:
+            oprot.writeFieldBegin('second_cat', TType.STRING, 4)
+            oprot.writeString(self.second_cat.encode('utf-8') if sys.version_info[0] == 2 else self.second_cat)
             oprot.writeFieldEnd()
         if self.size is not None:
-            oprot.writeFieldBegin('size', TType.I32, 4)
+            oprot.writeFieldBegin('size', TType.I32, 5)
             oprot.writeI32(self.size)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -299,24 +311,98 @@ class UserRequest(object):
         return not (self == other)
 
 
+class OneRecResult(object):
+    """
+    Attributes:
+     - rec_id
+     - rec_name
+    """
+
+    thrift_spec = (
+        None,  # 0
+        (1, TType.STRING, 'rec_id', 'UTF8', None, ),  # 1
+        (2, TType.STRING, 'rec_name', 'UTF8', None, ),  # 2
+    )
+
+    def __init__(self, rec_id=None, rec_name=None,):
+        self.rec_id = rec_id
+        self.rec_name = rec_name
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, (self.__class__, self.thrift_spec))
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.rec_id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.rec_name = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
+            return
+        oprot.writeStructBegin('OneRecResult')
+        if self.rec_id is not None:
+            oprot.writeFieldBegin('rec_id', TType.STRING, 1)
+            oprot.writeString(self.rec_id.encode('utf-8') if sys.version_info[0] == 2 else self.rec_id)
+            oprot.writeFieldEnd()
+        if self.rec_name is not None:
+            oprot.writeFieldBegin('rec_name', TType.STRING, 2)
+            oprot.writeString(self.rec_name.encode('utf-8') if sys.version_info[0] == 2 else self.rec_name)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.rec_id is None:
+            raise TProtocolException(message='Required field rec_id is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
 class RecResponse(object):
     """
     Attributes:
      - status
-     - errStr
+     - err_str
      - data
     """
 
     thrift_spec = (
         None,  # 0
         (1, TType.I32, 'status', None, None, ),  # 1
-        (2, TType.STRING, 'errStr', 'UTF8', None, ),  # 2
-        (3, TType.LIST, 'data', (TType.MAP, (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), False), None, ),  # 3
+        (2, TType.STRING, 'err_str', 'UTF8', None, ),  # 2
+        (3, TType.LIST, 'data', (TType.STRUCT, (OneRecResult, OneRecResult.thrift_spec), False), None, ),  # 3
     )
 
-    def __init__(self, status=None, errStr=None, data=None,):
+    def __init__(self, status=None, err_str=None, data=None,):
         self.status = status
-        self.errStr = errStr
+        self.err_str = err_str
         self.data = data
 
     def read(self, iprot):
@@ -335,7 +421,7 @@ class RecResponse(object):
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.errStr = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.err_str = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
@@ -343,13 +429,8 @@ class RecResponse(object):
                     self.data = []
                     (_etype3, _size0) = iprot.readListBegin()
                     for _i4 in range(_size0):
-                        _elem5 = {}
-                        (_ktype7, _vtype8, _size6) = iprot.readMapBegin()
-                        for _i10 in range(_size6):
-                            _key11 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _val12 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _elem5[_key11] = _val12
-                        iprot.readMapEnd()
+                        _elem5 = OneRecResult()
+                        _elem5.read(iprot)
                         self.data.append(_elem5)
                     iprot.readListEnd()
                 else:
@@ -368,19 +449,15 @@ class RecResponse(object):
             oprot.writeFieldBegin('status', TType.I32, 1)
             oprot.writeI32(self.status)
             oprot.writeFieldEnd()
-        if self.errStr is not None:
-            oprot.writeFieldBegin('errStr', TType.STRING, 2)
-            oprot.writeString(self.errStr.encode('utf-8') if sys.version_info[0] == 2 else self.errStr)
+        if self.err_str is not None:
+            oprot.writeFieldBegin('err_str', TType.STRING, 2)
+            oprot.writeString(self.err_str.encode('utf-8') if sys.version_info[0] == 2 else self.err_str)
             oprot.writeFieldEnd()
         if self.data is not None:
             oprot.writeFieldBegin('data', TType.LIST, 3)
-            oprot.writeListBegin(TType.MAP, len(self.data))
-            for iter13 in self.data:
-                oprot.writeMapBegin(TType.STRING, TType.STRING, len(iter13))
-                for kiter14, viter15 in iter13.items():
-                    oprot.writeString(kiter14.encode('utf-8') if sys.version_info[0] == 2 else kiter14)
-                    oprot.writeString(viter15.encode('utf-8') if sys.version_info[0] == 2 else viter15)
-                oprot.writeMapEnd()
+            oprot.writeListBegin(TType.STRUCT, len(self.data))
+            for iter6 in self.data:
+                iter6.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -389,8 +466,8 @@ class RecResponse(object):
     def validate(self):
         if self.status is None:
             raise TProtocolException(message='Required field status is unset!')
-        if self.errStr is None:
-            raise TProtocolException(message='Required field errStr is unset!')
+        if self.err_str is None:
+            raise TProtocolException(message='Required field err_str is unset!')
         if self.data is None:
             raise TProtocolException(message='Required field data is unset!')
         return
