@@ -8,7 +8,6 @@ from collections import Counter
 def sample_sort(x):
     """
     :param x: [{},{}]
-    :param y: [{},{}]
     :return: 
     """
     result_list = []
@@ -21,6 +20,7 @@ def sample_sort(x):
             seen[v['rec_id']] = v['sim'] + seen[v['rec_id']]
             result_list.append({'rec_id':v['rec_id'],'sim':seen[v['rec_id']]})
     return sorted(result_list, key=lambda k: k['sim'], reverse = True)
+
 
 
 

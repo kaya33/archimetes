@@ -18,27 +18,22 @@ class WebDataSource(object):
         except Exception as e:
             print(e)
 
-
-
-
-def fetchKwData(body,headers):
-    URL = "http://www.leiyishan.baixing.cn/recapi/getAdByKw"
+def fetchKwData(data,headers=None):
+    if headers is None:
+        headers = {
+            'cache-control': "no-cache",
+            'postman-token': "82f99b3a-2fcb-527e-2f13-1b2e5c3303bc"
+        }
+    body = json.dumps(data, ensure_ascii=False)
+    URL = "http://www.baixing.com/recapi/getAdByKw"
 
     kwdata = WebDataSource("post", URL).fetch_data(body,headers)
+    print kwdata
     return kwdata
 
 
 
 if __name__ == "__main__":
 
-    payload = {"num": 3,"city": "shanghai","category": "wupinhuishou","tag": "二手_相机","days": 400}
-    body = json.dumps(payload, ensure_ascii=False)
-
-    headers = {
-        'cache-control': "no-cache",
-        'postman-token': "82f99b3a-2fcb-527e-2f13-1b2e5c3303bc"
-    }
-
-    response = fetchKwData(body=body, headers=headers)
-
-    print(response.text)
+    data = {"num": 3,"city": "shanghai","category": "wupinhuishou","tag": "二手_相机","days": 400}
+    response = fetchKwData(data)
