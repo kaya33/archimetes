@@ -6,6 +6,7 @@ class UP(Mongo):
 
     def read_tag(self, collect_name, search_json={}, top_category='', category='', top=5):
         result = self.read(collect_name, search_json)
+        print result
         result_dict = {}
         try:
             for k1, v1 in result['tags'].items():

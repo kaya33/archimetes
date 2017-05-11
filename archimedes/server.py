@@ -18,21 +18,18 @@ import re
 from recommender.ttypes import *
 from recommender import Recommender
 
-
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
-from api.mongo_base import Mongo\
+from api.mongo_base import Mongo
+from api.user_tag import UP
 from core.combine_sort import sample_sort
 from conf.config_default import configs
 
-<<<<<<< HEAD
 from utils.parse_json import get_all_keywd
 from data.base_data_source import fetchKwData
 
-=======
->>>>>>> 04afef6d6992e84d29167007a414605f33501796
 log = logger.getLogger(__name__)
 
 reload(sys)
@@ -49,7 +46,7 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     print 'get mongo data'
-    data = mongo.read('RecommendationUserTagsOffline', {'user_id':user_id}).next()
+    data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id})
     print data
     ## contant key word
     tags = get_all_keywd(data['tags'][first_cat][second_cat]['contant'])
@@ -66,7 +63,8 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
 
 
 
-mongo = Mongo('chaoge')
+mongo = Mongo('chaoge', 0)
+up = UP('chaoge', 0)
 mongo.connect()
 
 class RecommenderServerHandler(object):
