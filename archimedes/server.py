@@ -15,7 +15,7 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
-from api.mongo import Mongo
+from api.mongo_base import Mongo
 
 
 logger = logging.getLogger(__name__)
