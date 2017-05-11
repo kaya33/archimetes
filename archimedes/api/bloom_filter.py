@@ -21,7 +21,7 @@ class Singleton(type):
 
 class Bf():
 
-    __metaclass__ = Singleton
+    # __metaclass__ = Singleton
 
     def __init__(self):
 
