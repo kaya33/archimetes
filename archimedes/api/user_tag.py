@@ -6,10 +6,9 @@ class UP(Mongo):
 
     def read_tag(self, collect_name, search_json={}, top_category='', category='', top=5):
         result = self.read(collect_name, search_json)
-        print result
         result_dict = {}
         try:
-            for k1, v1 in result['tags'].items():
+            for k1, v1 in result.next()['tags'].items():
 
                 if k1 != top_category and top_category != '':
                     continue
@@ -29,3 +28,12 @@ class UP(Mongo):
             return {}
 
         return result_dict
+
+def test():
+    a = UP('chaoge')
+    a.connect()
+    user_id = '748418c365704429a4e8645dddb6e995'
+    # print a.read_tag('RecommendationUserTagsOffline', {})
+    print a.read_tag('RecommendationUserTagsOffline', {'user_id':user_id})
+
+# test()

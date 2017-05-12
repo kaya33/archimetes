@@ -24,7 +24,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UP
-from core.combine_sort import sample_sort
+from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
 
 from utils.parse_json import get_all_keywd
@@ -46,26 +46,50 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     print 'get mongo data'
-    data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id})
-    print data
+    data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id}, top=size)
     ## contant key word
-    tags = get_all_keywd(data['tags'][first_cat][second_cat]['contant'])
-    tags = chinese_word(sorted(tags.items(), key=lambda x: x[1], reverse=True)[:size])
-    kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([tag[0] for tag in tags]),"days": 400}
+    tags = data[first_cat][second_cat]['contant']
+    # tags = chinese_word(str(tags))
+    # print tags[]
+    tmp_list = []
+    for info_tuple in tags:
+        k, v = info_tuple
+        k = k.encode('utf-8')
+        v = float(v)
+        tmp_list.append((k, v))
+    second_cat = second_cat.encode('utf-8')
+    kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"days": 400}
+    print kwdata
     user_profile_result = fetchKwData(kwdata)
+    print user_profile_result
     ## meta key word
-    tags = get_all_keywd(data['tags'][first_cat][second_cat]['meta'])
-    tags = chinese_word(sorted(tags.items(), key=lambda x: x[1], reverse=True)[:size])
-    kwdata = {"num": size,"city":city, "category": second_cat, "tag": "_".join([tag[0] for tag in tags]),"days": 400}
-    user_profile_result.extend(fetchKwData(kwdata))
+    tags = data[first_cat][second_cat]['mata']
+    print tags
+    tmp_list = []
+    for info_tuple in tags:
+        k, v = info_tuple
+        k = k.encode('utf-8')
+        v = float(v)
+        tmp_list.append((k, v))
+    print "_".join([x[0] for x in tmp_list])
+    kwdata1 = {"num": size,"city":city, "category": second_cat, "tag": "_".join([x[0] for x in tmp_list]),"days": 400}
+    print kwdata1
+    user_profile_result.extend(fetchKwData(kwdata1))
+    print user_profile_result
 
-    return user_profile_result
+    tmp_list = []
+    for info_tuple in user_profile_result:
+        k, v = info_tuple['ad_id'], info_tuple['score']
+        tmp_list.append((k, v))
+    print repr(tmp_list)
+    return tmp_list
 
 
 
 mongo = Mongo('chaoge', 0)
 up = UP('chaoge', 0)
 mongo.connect()
+up.connect()
 
 class RecommenderServerHandler(object):
     def __init__(self):
@@ -135,7 +159,6 @@ class RecommenderServerHandler(object):
         # TODO 过滤
 
         for obj in combine_data[:size]:
-            print OneRecResult(obj['rec_id'],'itemCF')
             res.data.append(OneRecResult(obj['rec_id'],'itemCF'))
 
         return res
@@ -143,7 +166,7 @@ class RecommenderServerHandler(object):
 
     def fetchRecByUser(self,req):
         print(req)
-        print("get the rec response by item ...")
+        print("get the rec response by user ...")
 
         res = RecResponse()
         res.status = responseType.OK
@@ -158,18 +181,15 @@ class RecommenderServerHandler(object):
 
         user_id = req.user_id.encode('utf-8')
         city = req.city_name.encode('utf-8')
-        first_cat = req.first_cat.encode('utf-8')
-        second_cat = req.second_cat.encode('utf-8')
-        print user_id,city,first_cat,second_cat
+        first_cat = req.first_cat
+        second_cat = req.second_cat
         if req.size > 0:
             size = req.size
         else:
             size = 3
-
         try:
             # get user key word
-            data = fetch_batch_userrec(user_id=user_id,first_cat=first_cat,second_cat=second_cat,city=city,size=size)
-            print data
+            data = fetch_batch_userrec(user_id=user_id,first_cat=first_cat,second_cat=second_cat,city=city,size=100)
         except Exception as e:
             res.status = responseType.ERROR
             res.errStr = "获取用户画像数据失败"
@@ -178,15 +198,13 @@ class RecommenderServerHandler(object):
 
         # TODO 调用离线推荐列表数据
 
-        # TODO 排序
-        combine_data = sample_sort(data)
+        print data
+        combine_data = sample_sort1(data)
+        # TODO bloom 过滤
 
-        # TODO 过滤
 
         for obj in combine_data[:size]:
-            print OneRecResult(obj['rec_id'],'itemCF')
-            res.data.append(OneRecResult(obj['rec_id'],'itemCF'))
-
+            res.data.append(OneRecResult(str(obj[0]),'user_prifile'))
         return res
 
 def main():
