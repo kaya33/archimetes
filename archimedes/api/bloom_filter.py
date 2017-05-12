@@ -32,8 +32,8 @@ class Bf():
     def filter_ad_by_user(self, user_id, ad_id_list):
 
         p = pyreBloom.pyreBloom(user_id, self.capacity, self.error_rate)
-        in_ele = set(p.contains(ad_id_list))
-        return [x for x in ad_id_list if x not in in_ele]
+        in_ele = set(p.contains([x[0] for x in ad_id_list]))
+        return [x for x[0] in ad_id_list if x not in in_ele]
 
     def save(self, user_id, ad_id_list, method='rec'):
 
