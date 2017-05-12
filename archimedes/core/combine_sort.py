@@ -30,8 +30,8 @@ def sample_sort1(x):
     """
     seen = dict()
     for v in x:
-        seen.setdefault(v[0], 0)
-        seen[v[0]] += v[1]
+        seen.setdefault(str(v[0]), 0)
+        seen[str(v[0])] += v[1]
     return sorted(seen.items(), key=lambda k: k[1], reverse = True)
 
 
