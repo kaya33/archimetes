@@ -19,8 +19,9 @@ struct ItemRequest {
 struct UserRequest {
     1: required string user_id;
     2: optional string city_name;
-    3: optional string category_name;
-    4: optional i32 size
+    3: optional string first_cat;
+    4: optional string second_cat;
+    5: optional i32 size
 }
 
 struct OneRecResult {

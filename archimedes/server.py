@@ -7,29 +7,89 @@ __author__ = 'xujiang@baixing.com'
 import os
 import sys
 
+import json
+
 
 sys.path.append('./gen-py')
 
 import logger
+import re
 
-from recommenderservice.ttypes import *
-from recommenderservice import Recommender
-
+from recommender.ttypes import *
+from recommender import Recommender
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
-from api.mongo_base import Mongo\
-from core.combine_sort import sample_sort
+from api.mongo_base import Mongo
+from api.user_tag import UP
+from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
-from core.fetch_item_result import fetch_batch_userrec,fetch_batch_itemrec,fetchKwData
 
+from utils.parse_json import get_all_keywd
+from data.base_data_source import fetchKwData
 
 log = logger.getLogger(__name__)
 
-mongo = Mongo('chaoge')
+reload(sys)
+sys.setdefaultencoding( "utf-8" )
+
+def chinese_word(obj):
+    return re.sub(r"\\u([a-f0-9]{4})", lambda mg: unichr(int(mg.group(1), 16)), json.dumps(obj))
+
+def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
+    data = mongo.read("RecommendationAd",{"_id":ad_id+"&"+rec_name+"&"+id_type}).next()
+    item_list = data['ads']
+    return item_list
+
+
+def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
+    print 'get mongo data'
+    data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id}, top=size)
+    ## contant key word
+    tags = data[first_cat][second_cat]['contant']
+    # tags = chinese_word(str(tags))
+    # print tags[]
+    tmp_list = []
+    for info_tuple in tags:
+        k, v = info_tuple
+        k = k.encode('utf-8')
+        v = float(v)
+        tmp_list.append((k, v))
+    second_cat = second_cat.encode('utf-8')
+    kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"days": 400}
+    print kwdata
+    user_profile_result = fetchKwData(kwdata)
+    print user_profile_result
+    ## meta key word
+    tags = data[first_cat][second_cat]['mata']
+    print tags
+    tmp_list = []
+    for info_tuple in tags:
+        k, v = info_tuple
+        k = k.encode('utf-8')
+        v = float(v)
+        tmp_list.append((k, v))
+    print "_".join([x[0] for x in tmp_list])
+    kwdata1 = {"num": size,"city":city, "category": second_cat, "tag": "_".join([x[0] for x in tmp_list]),"days": 400}
+    print kwdata1
+    user_profile_result.extend(fetchKwData(kwdata1))
+    print user_profile_result
+
+    tmp_list = []
+    for info_tuple in user_profile_result:
+        k, v = info_tuple['ad_id'], info_tuple['score']
+        tmp_list.append((k, v))
+    print repr(tmp_list)
+    return tmp_list
+
+
+
+mongo = Mongo('chaoge', 0)
+up = UP('chaoge', 0)
 mongo.connect()
+up.connect()
 
 class RecommenderServerHandler(object):
     def __init__(self):
@@ -91,23 +151,22 @@ class RecommenderServerHandler(object):
         except Exception as e:
             res.status = responseType.ERROR
             res.errStr = "获取离线推荐数据失败"
-            log.error(e)
+            return res
+
 
         # TODO 排序
         combine_data = sample_sort(data)
-        print combine_data
         # TODO 过滤
 
-        for sub in combine_data:
-            for key in sub:
-                sub[key] = str(sub[key])
-        res.data.extend(combine_data[:size])
+        for obj in combine_data[:size]:
+            res.data.append(OneRecResult(obj['rec_id'],'itemCF'))
+
         return res
 
 
     def fetchRecByUser(self,req):
         print(req)
-        print("get the rec response by item ...")
+        print("get the rec response by user ...")
 
         res = RecResponse()
         res.status = responseType.OK
@@ -120,37 +179,33 @@ class RecommenderServerHandler(object):
             res.data = []
             return res
 
-        user_id = req.user_id
-        city = req.city
-        category = req.category
+        user_id = req.user_id.encode('utf-8')
+        city = req.city_name.encode('utf-8')
+        first_cat = req.first_cat
+        second_cat = req.second_cat
         if req.size > 0:
             size = req.size
         else:
             size = 3
-
         try:
             # get user key word
-            kw = fetch_batch_userrec(user_id,city,category)
-            data = {"num": 3, "city": city, "category": category, "tag": kw, "days": 400}
-            # get user_profile data by kw
-            response = fetchKwData(data)
-            return res
+            data = fetch_batch_userrec(user_id=user_id,first_cat=first_cat,second_cat=second_cat,city=city,size=100)
         except Exception as e:
             res.status = responseType.ERROR
-            res.errStr = ""
-            log.error(e)
+            res.errStr = "获取用户画像数据失败"
+            return res
+
 
         # TODO 调用离线推荐列表数据
 
-        # TODO 排序
-        combine_data = sample_sort(data)
+        print data
+        combine_data = sample_sort1(data)
+        # TODO bloom 过滤
 
-        # TODO 过滤
 
-        for sub in combine_data:
-            for key in sub:
-                sub[key] = str(sub[key])
-        res.data.extend(combine_data[:size])
+        for obj in combine_data[:size]:
+            res.data.append(OneRecResult(str(obj[0]),'user_prifile'))
+        return res
 
 def main():
 
@@ -162,11 +217,13 @@ def main():
     transport = TSocket.TServerSocket(port=port)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TCompactProtocol.TCompactProtocolFactory()
-    server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory).setNumThreads(number_thread)
+    server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
     log.info("Starting server on port : {}".format(str(port)))
     try:
+        server.setNumThreads(number_thread)
         server.serve()
     except (Exception, KeyboardInterrupt) as e:
+        print e
         log.error("Execption / Keyboard interrupt occured: ", e)
         exit(0)
 

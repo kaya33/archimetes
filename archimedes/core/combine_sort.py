@@ -22,6 +22,19 @@ def sample_sort(x):
     return sorted(result_list, key=lambda k: k['sim'], reverse = True)
 
 
+def sample_sort1(x):
+    """
+    用户画像结果的排序
+    :param x: 
+    :return: 
+    """
+    seen = dict()
+    for v in x:
+        seen.setdefault(v[0], 0)
+        seen[v[0]] += v[1]
+    return sorted(seen.items(), key=lambda k: k[1], reverse = True)
+
+
 
 
 

@@ -4,10 +4,6 @@
 __author__ = 'xujiang@baixing.com'
 
 
-from archimedes.api.mongo import Mongo
-
-mongo = Mongo('chaoge', 0)
-mongo.connect()
 
 result = set()
 
@@ -24,10 +20,11 @@ def get_all_keywd(dict_a):
     return result
 
 
-
-
-
 if __name__ == "__main__":
+    from archimedes.api.mongo import Mongo
+
+    mongo = Mongo('chaoge', 0)
+    mongo.connect()
     data = mongo.read('RecommendationUserTagsOffline', {'user_id': "0195353beaf444fcbe9776d3772f5daa"}).next()
     print data['tags']
     result = get_all_keywd(data['tags'])

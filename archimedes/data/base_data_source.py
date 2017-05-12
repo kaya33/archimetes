@@ -13,7 +13,7 @@ class WebDataSource(object):
     def fetch_data(self, body=None,headers=None):
         body = body
         try:
-            r = requests.request(self.type, url=self.url, data=body.encode('utf-8'),headers=headers, timeout=5)
+            r = requests.request(self.type, url=self.url, data=body, headers=headers, timeout=5)
             return r
         except Exception as e:
             print(e)
@@ -26,10 +26,8 @@ def fetchKwData(data,headers=None):
         }
     body = json.dumps(data, ensure_ascii=False)
     URL = "http://www.baixing.com/recapi/getAdByKw"
-
     kwdata = WebDataSource("post", URL).fetch_data(body,headers)
-    print kwdata
-    return kwdata
+    return kwdata.json()
 
 
 
