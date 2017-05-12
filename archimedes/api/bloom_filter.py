@@ -33,7 +33,7 @@ class Bf():
 
         p = pyreBloom.pyreBloom(user_id, self.capacity, self.error_rate)
         in_ele = set(p.contains([x[0] for x in ad_id_list]))
-        return [x for x[0] in ad_id_list if x not in in_ele]
+        return [x for x in ad_id_list if x[0] not in in_ele]
 
     def save(self, user_id, ad_id_list, method='rec'):
 
