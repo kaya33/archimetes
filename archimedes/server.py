@@ -47,7 +47,7 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     print 'get mongo data'
-    data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id}, top=size)
+    data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     ## contant key word
     tags = data[first_cat][second_cat]['contant']
     # tags = chinese_word(str(tags))
