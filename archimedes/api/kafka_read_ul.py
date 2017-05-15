@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import json
 import threading
 import requests
@@ -28,7 +29,7 @@ class KafkaUlConsumer():
 
         self.host = conf['host']
         self.group_id = conf['group_id']
-        self.timeout = conf['time_out']
+        self.timeout = conf['timeout']
         self.topic = conf['topic']
         self.consume_num = conf['consume_num']
 
@@ -82,19 +83,22 @@ class KafkaUlConsumer():
         consumer = KafkaConsumer(self.topic,
                                  group_id=self.group_id,
                                  bootstrap_servers=self.host,
-                                 consumer_timeout_ms=self.timeout)
+                                # consumer_timeout_ms=self.timeout
+                                )
         for message in consumer:
+            print message.value
             # message value and key are raw bytes -- decode if necessary!
             # e.g., for unicode: `message.value.decode('utf-8')`
-            if message.topic == 'app_vad_traffic':
-                self.count_online_tags(message.value)
+            tmp_json = json.loads(message.value)
+            if tmp_json['type'] == 'app_vad_traffic':
+                self.count_online_tags(tmp_json)
 
     def build_consumer(self):
-
         for num in range(self.consume_num):
-            self.consumer[num] = threading.Thread(target=self.start_one_consumer)
+            self.consumer.append(threading.Thread(target=self.start_one_consumer))
             self.consumer[num].daemon = True
             self.consumer[num].start()
+            self.consumer[num].join()
 
 
     def test(self):
@@ -103,3 +107,5 @@ class KafkaUlConsumer():
 def test():
     a = KafkaUlConsumer()
     a.test()
+
+test()
