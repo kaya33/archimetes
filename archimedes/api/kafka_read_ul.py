@@ -46,6 +46,9 @@ class KafkaUlConsumer():
 
         return to_one_dict
 
+    def time_decay(self, kws, ts):
+        return kws
+
     def count_online_tags(self, value):
 
         # 1.尝试从mongo取标签
@@ -59,7 +62,10 @@ class KafkaUlConsumer():
 
         # 2.如果mongo有就用mongo，如果没有就取mysql，切ad 并存入mongo
         try:
-            kws = result.next()['kws']
+            result = result.next()
+            kws = result['kws']
+            ts = result['update_time']
+            kws = self.time_decay(kws, ts)
         except:
             get_ad_info_url = 'http://www.baixing.com/recapi/getAdInfoById?adId={}'.format(ad_id)
             try:
@@ -69,6 +75,8 @@ class KafkaUlConsumer():
                 return
             title, ad_content = request_info['title'], request_info['content']
             kws = self.cut_ad_content(title, ad_content)
+
+        pass
 
         # 3.写redis
         bf = Bf()
