@@ -27,6 +27,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  string ping()')
     print('  RecResponse fetchRecByItem(ItemRequest req)')
     print('  RecResponse fetchRecByUser(UserRequest req)')
+    print('  RecResponse fetchRecByMult(MultRequest req)')
     print('')
     sys.exit(0)
 
@@ -123,6 +124,12 @@ elif cmd == 'fetchRecByUser':
         print('fetchRecByUser requires 1 args')
         sys.exit(1)
     pp.pprint(client.fetchRecByUser(eval(args[0]),))
+
+elif cmd == 'fetchRecByMult':
+    if len(args) != 1:
+        print('fetchRecByMult requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.fetchRecByMult(eval(args[0]),))
 
 else:
     print('Unrecognized method %s' % cmd)
