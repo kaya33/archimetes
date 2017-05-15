@@ -6,7 +6,7 @@ __author__ = 'xujiang@baixing.com'
 
 import os
 import sys
-
+import multiprocessing
 import json
 
 
@@ -24,7 +24,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UP
-from api.bloom_filter import Bf
+# from api.bloom_filter import Bf
 from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
 
@@ -47,42 +47,28 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     print 'get mongo data'
-    data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
+    data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id}, top=size)
     ## contant key word
-    tags = data[first_cat][second_cat]['contant']
-    # tags = chinese_word(str(tags))
-    # print tags[]
-    tmp_list = []
-    for info_tuple in tags:
-        k, v = info_tuple
-        k = k.encode('utf-8')
-        v = float(v)
-        tmp_list.append((k, v))
-    second_cat = second_cat.encode('utf-8')
-    kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"days": 400}
-    print kwdata
-    user_profile_result = fetchKwData(kwdata)
-    print user_profile_result
-    ## meta key word
-    tags = data[first_cat][second_cat]['mata']
-    print tags
-    tmp_list = []
-    for info_tuple in tags:
-        k, v = info_tuple
-        k = k.encode('utf-8')
-        v = float(v)
-        tmp_list.append((k, v))
-    print "_".join([x[0] for x in tmp_list])
-    kwdata1 = {"num": size,"city":city, "category": second_cat, "tag": "_".join([x[0] for x in tmp_list]),"days": 400}
-    print kwdata1
-    user_profile_result.extend(fetchKwData(kwdata1))
-    print user_profile_result
+    try:
+        tags = data[first_cat][second_cat]['contant'][:1]
+        mata_tags = data[first_cat][second_cat]['mata'][:3]
+        tags.extend(mata_tags)
+        tmp_list = []
+        for info_tuple in tags:
+            k, v = info_tuple
+            k = k.encode('utf-8')
+            v = float(v)
+            tmp_list.append((k, v))
+        second_cat = second_cat.encode('utf-8')
+        kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"days": 400}
+        user_profile = fetchKwData(kwdata)
+    except Exception as e:
+        user_profile = []
 
     tmp_list = []
-    for info_tuple in user_profile_result:
+    for info_tuple in user_profile:
         k, v = info_tuple['ad_id'], info_tuple['score']
         tmp_list.append((k, v))
-    print repr(tmp_list)
     return tmp_list
 
 
@@ -129,12 +115,12 @@ class RecommenderServerHandler(object):
 
         res = RecResponse()
         res.status = responseType.OK
-        res.errStr = ""
+        res.err_str = ""
         res.data = []
 
         if req.ad_id is None:
             res.status = responseType.ERROR;
-            res.errStr = "ad_id不能为空"
+            res.err_str = "ad_id不能为空"
             res.data = []
             return res
 
@@ -151,7 +137,7 @@ class RecommenderServerHandler(object):
 
         except Exception as e:
             res.status = responseType.ERROR
-            res.errStr = "获取离线推荐数据失败"
+            res.err_str = "获取离线推荐数据失败"
             return res
 
 
@@ -171,12 +157,12 @@ class RecommenderServerHandler(object):
 
         res = RecResponse()
         res.status = responseType.OK
-        res.errStr = ""
+        res.err_str = ""
         res.data = []
 
         if req.user_id is None:
             res.status == responseType.ERROR
-            res.errStr = "获取离线推荐数据失败"
+            res.err_str = "用户ID不能为空"
             res.data = []
             return res
 
@@ -193,22 +179,73 @@ class RecommenderServerHandler(object):
             data = fetch_batch_userrec(user_id=user_id,first_cat=first_cat,second_cat=second_cat,city=city,size=100)
         except Exception as e:
             res.status = responseType.ERROR
-            res.errStr = "获取用户画像数据失败"
+            res.err_str = "获取用户画像数据失败"
             return res
 
 
         # TODO 调用离线推荐列表数据
 
-        print data
+
+        if len(data) == 0:
+            log.error("用户画像数据为空")
+            res.status = responseType.ERROR
+            res.err_str = "用户画像数据为空"
+            return res
+
         combine_data = sample_sort1(data)
+        print combine_data
         # TODO bloom 过滤
-        bf = Bf()
-        combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
+        # bf = Bf()
+        # combine_data = bf.filter_ad_by_user(user_id, combine_data)
+        # bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(str(obj[0]),'user_prifile'))
         return res
+
+    def fetchRecByMult(self,req):
+        """ Integration of multiple strategies
+        :param req: 
+        :return: 
+        
+        """
+        res = RecResponse()
+        res.status = responseType.OK
+        res.err_str = ""
+        res.data = []
+
+        if req.user_id is None or req.ad_id is None:
+            res.status == responseType.ERROR
+            res.err_str = "用户ID和ad_id不能为空"
+            res.data = []
+            return res
+
+        user_id = req.user_id
+        ad_id= req.ad_id
+        city = req.city_name.encode('utf-8')
+        first_cat = req.first_cat
+        second_cat = req.second_cat
+        if req.size > 0:
+            size = req.size
+        else:
+            size = 3
+
+        # get user tags
+        result = []
+        try:
+            pool = multiprocessing.Pool(processes=4)
+            result.append(pool.apply_async(fetch_batch_userrec, (user_id,first_cat,second_cat,city,3,)))
+            result.append(pool.apply_async(fetch_batch_itemrec,(ad_id,)))
+            pool.close()
+            pool.join()
+        except Exception as e:
+            res.status == responseType.ERROR
+            res.err_str = "获取推荐结果失败"
+            res.data = []
+            return res
+
+
+
 
 def main():
 

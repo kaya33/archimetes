@@ -53,6 +53,7 @@ def getRecServerSocket(port):
 
     # Make socket
     transport = TSocket.TSocket('localhost', port)
+    transport.setTimeout(500)
     # Buffering is critical. Raw sockets are very slow
     transport = TTransport.TBufferedTransport(transport)
     # Wrap in a protocol
@@ -65,7 +66,8 @@ def getRecServerSocket(port):
     try:
         transport.open()
     except Exception as e:
-        log.error("Exception while connecting to block server, check if server is running on port", port)
+        print e
+        log.error("Exception while connecting to block server, check if server is running on port: {}".format(port))
         exit(1)
 
     return client
@@ -98,6 +100,7 @@ def fetchRecByUser(sock, req):
         log.error(e)
         print("ERROR")
     if resp.status == responseType.OK:
+
       #print "Deletion of block successful"
       log.info("OK")
     else:
@@ -230,7 +233,7 @@ class ThreadPool(object):
 # 使用例子
 if __name__ == "__main__":
 
-    pool = ThreadPool(100)  # 创建pool对象，最多创建5个线程
+    pool = ThreadPool(5)  # 创建pool对象，最多创建5个线程
 
     def callback(status, result):
         pass
@@ -253,13 +256,11 @@ if __name__ == "__main__":
 
         start = time.time()
         servPort = getRecServerPort()
-
-
-        sock = getRecServerSocket(servPort)
-        fetchRecByItem(sock, req)
-        for _ in range(10):
+        for _ in range(100000):
+            print _
             sock = getRecServerSocket(servPort)
-            pool.run(fetchRecByItem, (sock, req,), callback=None) # 将action函数，及action的参数，callback函数传给run()方法
+            fetchRecByItem(sock, req)
+            # pool.run(fetchRecByItem, (sock, req,), callback=None) # 将action函数，及action的参数，callback函数传给run()方法
         pool.close()
         end = time.time()
         print "cost all time: %s" % (end - start)
