@@ -6,7 +6,7 @@ __author__ = 'xujiang@baixing.com'
 
 import os
 import sys
-
+import multiprocessing
 import json
 
 
@@ -50,9 +50,9 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id}, top=size)
     ## contant key word
     try:
-        tags = data[first_cat][second_cat]['contant']
-        # tags = chinese_word(str(tags))
-        # print tags[]
+        tags = data[first_cat][second_cat]['contant'][:1]
+        mata_tags = data[first_cat][second_cat]['mata'][:3]
+        tags.extend(mata_tags)
         tmp_list = []
         for info_tuple in tags:
             k, v = info_tuple
@@ -61,30 +61,14 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
             tmp_list.append((k, v))
         second_cat = second_cat.encode('utf-8')
         kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"days": 400}
-        user_profile_content = fetchKwData(kwdata)
+        user_profile = fetchKwData(kwdata)
     except Exception as e:
-        user_profile_content = []
+        user_profile = []
 
-    ## meta key word
-    try:
-        tags = data[first_cat][second_cat]['mata']
-        tmp_list = []
-        for info_tuple in tags:
-            k, v = info_tuple
-            k = k.encode('utf-8')
-            v = float(v)
-            tmp_list.append((k, v))
-        kwdata1 = {"num": size,"city":city, "category": second_cat, "tag": "_".join([x[0] for x in tmp_list]),"days": 400}
-        user_profile_mata = fetchKwData(kwdata1)
-    except Exception as e:
-        user_profile_mata = []
-
-    user_profile_content.extend(user_profile_mata)
     tmp_list = []
-    for info_tuple in user_profile_content:
+    for info_tuple in user_profile:
         k, v = info_tuple['ad_id'], info_tuple['score']
         tmp_list.append((k, v))
-    print repr(tmp_list)
     return tmp_list
 
 
@@ -218,6 +202,50 @@ class RecommenderServerHandler(object):
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(str(obj[0]),'user_prifile'))
         return res
+
+    def fetchRecByMult(self,req):
+        """ Integration of multiple strategies
+        :param req: 
+        :return: 
+        
+        """
+        res = RecResponse()
+        res.status = responseType.OK
+        res.err_str = ""
+        res.data = []
+
+        if req.user_id is None or req.ad_id is None:
+            res.status == responseType.ERROR
+            res.err_str = "用户ID和ad_id不能为空"
+            res.data = []
+            return res
+
+        user_id = req.user_id
+        ad_id= req.ad_id
+        city = req.city_name.encode('utf-8')
+        first_cat = req.first_cat
+        second_cat = req.second_cat
+        if req.size > 0:
+            size = req.size
+        else:
+            size = 3
+
+        # get user tags
+        result = []
+        try:
+            pool = multiprocessing.Pool(processes=4)
+            result.append(pool.apply_async(fetch_batch_userrec, (user_id,first_cat,second_cat,city,3,)))
+            result.append(pool.apply_async(fetch_batch_itemrec,(ad_id,)))
+            pool.close()
+            pool.join()
+        except Exception as e:
+            res.status == responseType.ERROR
+            res.err_str = "获取推荐结果失败"
+            res.data = []
+            return res
+
+
+
 
 def main():
 

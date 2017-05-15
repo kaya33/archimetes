@@ -24,6 +24,15 @@ struct UserRequest {
     5: optional i32 size
 }
 
+struct MultRequest {
+    1: required string user_id;
+    2: required string ad_id;
+    3: optional string city_name;
+    4: optional string first_cat;
+    5: optional string second_cat;
+    6: optional i32 ssize
+}
+
 struct OneRecResult {
     1: required string rec_id;
     2: optional string rec_name
@@ -42,5 +51,7 @@ service Recommender {
 
    RecResponse fetchRecByItem(1:ItemRequest req);
 
-   RecResponse fetchRecByUser(1:UserRequest req)
+   RecResponse fetchRecByUser(1:UserRequest req);
+
+   RecResponse fetchRecByMult(1:MultRequest req)
 }
