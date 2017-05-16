@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import pymongo
 import json
+import logging
 from pymongo import MongoClient
 
 
@@ -70,8 +71,12 @@ class Mongo():
             return []
 
         query_obj = self.write_db[collect_name]
-        result = query_obj.insert_many(data)
-        return result.inserted_ids
+        try:
+            result = query_obj.insert_many(data)
+            return 'success'
+        except Exception as e:
+            logging.error(e)
+            return 'error'
 
     def delete(self, collect_name, search_json={}):
 
@@ -82,8 +87,7 @@ class Mongo():
 
         coll = self.write_db[collect_name]
         for d in update_list:
-            coll.update({key: d[key]}, d)
-
+            coll.update({key: d[key]}, d, True)
         return 'success'
 
 

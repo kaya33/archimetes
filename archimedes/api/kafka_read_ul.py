@@ -4,8 +4,9 @@ import threading
 import requests
 import logging
 import jieba.analyse
-#from bloom_filter import Bf
-#from mongo_base import Mongo
+import math
+from bloom_filter import Bf
+from mongo_base import Mongo
 from kafka import KafkaConsumer
 
 class Singleton(type):
@@ -43,11 +44,38 @@ class KafkaUlConsumer():
             tmp_weight = all_set[1] * para
             if tmp_weight > 600:
                 to_one_dict[all_set[0]] = int(tmp_weight)
+        # 前8
+        return dict(sorted(to_one_dict.items(), key=lambda d: d[1], reverse=True)[:8])
 
-        return to_one_dict
+    def time_decay(self, tags, tags_new, top_category, category, city, ts, ts_now):
 
-    def time_decay(self, kws, ts):
-        return kws
+        two_day_s = 172800
+        times = math.pow(0.5, (ts_now - ts) / two_day_s)
+        try:
+            for k1, v1 in tags_new.items():
+
+                if k1 != top_category and top_category != '':
+                    continue
+
+                tags.setdefault(k1, {})
+                for k2, v2 in v1.items():
+
+                    if k2 != category and category != '':
+                        continue
+
+                    tags[k1].setdefault(k2, {})
+
+                    for k3, v3 in v2.items():
+                        k3 = k3.replace('.', '```')
+                        tags[k1][k2].setdefault(k3, 0)
+                        tags[k1][k2][k3] += tags_new[k1][k2][k3] * times
+                    tags[k1][k2] = dict(sorted(tags[k1][k2].items(), key=lambda d: d[1], reverse=True)[:50])
+
+        except KeyError as e:
+            logging.error(e)
+            return tags
+        # 前 50
+        return tags
 
     def count_online_tags(self, value):
 
@@ -55,7 +83,7 @@ class KafkaUlConsumer():
         # 1.尝试从mongo取标签
         user_id = value['udid']
         ad_id = value['adid']
-        updated_time = value['interview_time']
+        ts_now = value['interview_time']
         # city = value['city']
         # category = value['category']
         mongo_driver = Mongo('chaoge', 0)
@@ -65,21 +93,24 @@ class KafkaUlConsumer():
         # 2.如果mongo有就用mongo，如果没有就取mysql，切ad 并存入mongo
         try:
             result = result.next()
-            print('read from ad content')
-            kws = result['kws']
-            ts = result['update_time']
-            kws = self.time_decay(kws, ts)
+            tags_new = result['tags']
+            top_category = result['top_category']
+            category = result['category']
+            city = result['city']
+
         except:
             get_ad_info_url = 'http://www.baixing.com/recapi/getAdInfoById?adId={}'.format(ad_id)
+            print('read from ad url')
             try:
                 request_info = json.loads(requests.get(get_ad_info_url).text)
             except Exception as e:
                 logging.error(e)
                 return
             title, ad_content = request_info['title'], request_info['content']
-            kws = self.cut_ad_content(title, ad_content)
-
-        pass
+            city, top_category, category = request_info['city'], request_info['top_category'], request_info['category']
+            tags_new = self.cut_ad_content(title, ad_content)
+            mongo_driver.insert('ad_content', {'_id': ad_id, 'city': city, 'top_category': top_category,
+                                               'category': category, 'update_time': ts_now, 'tags': tags_new})
 
         # 3.写redis
         bf = Bf()
@@ -87,7 +118,16 @@ class KafkaUlConsumer():
 
 
         # 4.拿到标签并更新在线部分
-        pass
+        online_result = mongo_driver.read('RecommendationUserTagsOnline', {'_id': user_id})
+        try:
+            online_result = online_result.next()
+            tags = online_result['tags']
+            ts = online_result['update_time']
+        except:
+            tags = {}
+            ts = ts_now
+        tags = self.time_decay(tags, tags_new, top_category, category, city, ts, ts_now)
+        mongo_driver.update('_id', {'_id': user_id, 'update_time': ts_now, 'tags': tags})
 
 
 
@@ -100,19 +140,9 @@ class KafkaUlConsumer():
                                 # consumer_timeout_ms=self.timeout
                                 )
         for index, message in enumerate(consumer):
-           # print repr(message)
-            #if index % 33333 == 0:
-            #    print index
-            #print message
-            # message value and key are raw bytes -- decode if necessary!
-            # e.g., for unicode: `message.value.decode('utf-8')`
-            #print repr(message.value)
            
             tmp_json = json.loads(message.value)
-           # print tmp_json 
-            if  tmp_json['type'] == 'app_vad_traffic':
-            #if tmp_json['type'] == 'app_vad_traffic':
-                print(tmp_json)
+            if tmp_json['type'] == 'app_vad_traffic':
                 self.count_online_tags(tmp_json)
 
     def build_consumer(self):
