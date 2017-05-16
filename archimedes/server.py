@@ -46,7 +46,7 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
-    data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id}, top=size)
+    data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     ## contant key word
     try:
         tags = data[first_cat][second_cat]['contant'][:1]
@@ -59,7 +59,7 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
             v = float(v)
             tmp_list.append((k, v))
         second_cat = second_cat.encode('utf-8')
-        kwdata = {"num": size,"city": city,"category": second_cat,"tag": " ".join([x[0] for x in tmp_list]),"days": 300}
+        kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
         begin = datetime.datetime.now()
         user_profile = fetchKwData(kwdata)
         end = datetime.datetime.now()

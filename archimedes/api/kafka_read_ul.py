@@ -25,7 +25,7 @@ class KafkaUlConsumer():
 
     def __init__(self):
 
-        conf = json.load(open('conf/kafka_conf.json'))
+        conf = json.load(open('api/conf/kafka_conf.json'))
         self.consumer = []
 
         self.host = conf['host']
@@ -45,44 +45,40 @@ class KafkaUlConsumer():
             if tmp_weight > 600:
                 to_one_dict[all_set[0]] = int(tmp_weight)
         # 前8
-        return dict(sorted(to_one_dict.items(), key=lambda d: d[1], reverse=True)[:8])
+        tmp_dict = dict(sorted(to_one_dict.items(), key=lambda d: d[1], reverse=True)[:8])
+        tmp_sum = sum([x[1] for x in tmp_dict.items()])
+        new_dict = {}
+        for k, v in tmp_dict.items():
+            k = k.replace('.', '```')
+            new_dict[k] = 1.0 * v / tmp_sum
+        return new_dict
 
     def time_decay(self, tags, tags_new, top_category, category, city, ts, ts_now):
 
         two_day_s = 172800
         times = math.pow(0.5, (ts_now - ts) / two_day_s)
-        try:
-            for k1, v1 in tags_new.items():
+        #try:
+        if 1:
+            tags.setdefault(top_category, {})
+            tags[top_category].setdefault(category, {})
 
-                if k1 != top_category and top_category != '':
-                    continue
+            for k3, v3 in tags_new.items():
+                k3 = k3.replace('.', '```').encode('utf-8')
+                tags[top_category][category].setdefault(k3, 0)
+                tags[top_category][category][k3] += v3 * times
+            tags[top_category][category] = dict(sorted(tags[top_category][category].items(), key=lambda d: d[1], reverse=True)[:50])
 
-                tags.setdefault(k1, {})
-                for k2, v2 in v1.items():
-
-                    if k2 != category and category != '':
-                        continue
-
-                    tags[k1].setdefault(k2, {})
-
-                    for k3, v3 in v2.items():
-                        k3 = k3.replace('.', '```')
-                        tags[k1][k2].setdefault(k3, 0)
-                        tags[k1][k2][k3] += tags_new[k1][k2][k3] * times
-                    tags[k1][k2] = dict(sorted(tags[k1][k2].items(), key=lambda d: d[1], reverse=True)[:50])
-
-        except KeyError as e:
-            logging.error(e)
-            return tags
+        #except KeyError as e:
+        #    logging.error(e)
+        #    return tags
         # 前 50
         return tags
 
     def count_online_tags(self, value):
 
-        #print value
         # 1.尝试从mongo取标签
-        user_id = value['udid']
-        ad_id = value['adid']
+        user_id = value['udid'].encode('utf-8')
+        ad_id = value['adid'].encode('utf-8')
         ts_now = value['interview_time']
         # city = value['city']
         # category = value['category']
@@ -96,7 +92,9 @@ class KafkaUlConsumer():
             tags_new = result['tags']
             top_category = result['top_category']
             category = result['category']
-            city = result['city']
+            #city = result['city']
+            print('read from db')
+            city = ''
 
         except:
             get_ad_info_url = 'http://www.baixing.com/recapi/getAdInfoById?adId={}'.format(ad_id)
@@ -107,10 +105,10 @@ class KafkaUlConsumer():
                 logging.error(e)
                 return
             title, ad_content = request_info['title'], request_info['content']
-            city, top_category, category = request_info['city'], request_info['top_category'], request_info['category']
+            city, top_category, category = request_info['city'], request_info['top_category'].encode('utf-8'), request_info['category'].encode('utf-8')
             tags_new = self.cut_ad_content(title, ad_content)
-            mongo_driver.insert('ad_content', {'_id': ad_id, 'city': city, 'top_category': top_category,
-                                               'category': category, 'update_time': ts_now, 'tags': tags_new})
+            mongo_driver.insert('ad_content', [{'_id': ad_id, 'city': city, 'top_category': top_category,
+                                                'category': category, 'update_time': ts_now, 'tags': tags_new}])
 
         # 3.写redis
         bf = Bf()
@@ -127,7 +125,7 @@ class KafkaUlConsumer():
             tags = {}
             ts = ts_now
         tags = self.time_decay(tags, tags_new, top_category, category, city, ts, ts_now)
-        mongo_driver.update('_id', {'_id': user_id, 'update_time': ts_now, 'tags': tags})
+        mongo_driver.update('RecommendationUserTagsOnline', '_id', {'_id': user_id, 'update_time': ts_now, 'tags': tags})
 
 
 
@@ -140,10 +138,11 @@ class KafkaUlConsumer():
                                 # consumer_timeout_ms=self.timeout
                                 )
         for index, message in enumerate(consumer):
-           
+            if index % 33333 == 0:
+                print  index 
             tmp_json = json.loads(message.value)
             if tmp_json['type'] == 'app_vad_traffic':
-                self.count_online_tags(tmp_json)
+                self.count_online_tags(tmp_json['msg'])
 
     def build_consumer(self):
         for num in range(self.consume_num):
