@@ -12,6 +12,7 @@ else:
     import Queue as queue
 import threading
 import contextlib
+import datetime
 import time
 
 from threading import Thread
@@ -38,7 +39,6 @@ log = logger.getLogger(__name__)
 # Add classes / functions as required here
 def getRecServerPort():
     # In this function read the configuration file and get the port number for the server
-    log.info("Get the server port by config file")
     try:
         port = int(configs.get('server').get('port', 9090))
         return port
@@ -53,7 +53,7 @@ def getRecServerSocket(port):
 
     # Make socket
     transport = TSocket.TSocket('localhost', port)
-    transport.setTimeout(500)
+    transport.setTimeout(30000)
     # Buffering is critical. Raw sockets are very slow
     transport = TTransport.TBufferedTransport(transport)
     # Wrap in a protocol
@@ -68,32 +68,39 @@ def getRecServerSocket(port):
     except Exception as e:
         print e
         log.error("Exception while connecting to block server, check if server is running on port: {}".format(port))
+        transport.close()
         exit(1)
 
     return client
 
 def fetchRecByItem(sock, req):
     try:
-      resp = sock.fetchRecByItem(req)
-      print(resp)
+        begin = datetime.datetime.now()
+        resp = sock.fetchRecByItem(req)
+        end = datetime.datetime.now()
+        print(resp)
+        print "the Thread sleep  %s sec\n" % ( end - begin)
     except Exception as e:
-      log.error("ERROR while calling fetchRecByItem")
-      log.error(e)
-      print("ERROR")
+        log.error("ERROR while calling fetchRecByItem")
+        log.error(e)
+        print("ERROR")
     if resp.status == responseType.OK:
-      #print "Deletion of block successful"
-      log.info("OK")
+        #print "Deletion of block successful"
+        log.info("OK")
     else:
-      #print "Deletion of block not successful"
-      log.error("ERROR")
+        #print "Deletion of block not successful"
+        log.error("ERROR")
    # else:
        # print "Server said ERROR,  Meta server get list unsuccessful"
 
 
 def fetchRecByUser(sock, req):
     try:
-      resp = sock.fetchRecByUser(req)
-      print(resp)
+        begin = datetime.datetime.now()
+        resp = sock.fetchRecByUser(req)
+        end = datetime.datetime.now()
+        print(resp)
+        print "the rec by user cost time %s sec\n" % (end - begin)
     except Exception as e:
         print e
         log.error("ERROR while calling fetchRecByUser")
@@ -101,13 +108,31 @@ def fetchRecByUser(sock, req):
         print("ERROR")
     if resp.status == responseType.OK:
 
-      #print "Deletion of block successful"
-      log.info("OK")
+        #print "Deletion of block successful"
+        log.info("OK")
     else:
-      #print "Deletion of block not successful"
-      log.error("ERROR")
-   # else:
-       # print "Server said ERROR,  Meta server get list unsuccessful"
+        #print "Deletion of block not successful"
+        log.error("ERROR")
+    # else:
+        # print "Server said ERROR,  Meta server get list unsuccessful"
+
+def fetchRecByMult(sock, req):
+
+    try:
+        resp = sock.fetchRecByMult(req)
+        print(resp)
+    except Exception as e:
+        print e
+        log.error("ERROR while calling fetchRecByMult")
+        log.error(e)
+        print("ERROR")
+    if resp.status == responseType.OK:
+
+        #print "Deletion of block successful"
+        log.info("OK")
+    else:
+        #print "Deletion of block not successful"
+        log.error("ERROR")
 
 
 #!/usr/bin/env python
@@ -157,13 +182,13 @@ class ThreadPool(object):
         # 函数，元组，函数 ，将这三个参数放在元组里面，当成一个整体放到队列里面
         self.q.put(w)  # 满足条件则创建线程，并把任务放队列里面
 
-
     def generate_thread(self):
         """
         创建一个线程
         """
         t = threading.Thread(target=self.call)  # 每一个线程被创建，执行call方法
         t.start()
+        print "线程id：{}".format(t.ident)
 
     def call(self):
         """
@@ -233,7 +258,7 @@ class ThreadPool(object):
 # 使用例子
 if __name__ == "__main__":
 
-    pool = ThreadPool(5)  # 创建pool对象，最多创建5个线程
+    pool = ThreadPool(50)  # 创建pool对象，最多创建5个线程
 
     def callback(status, result):
         pass
@@ -245,6 +270,7 @@ if __name__ == "__main__":
     command = sys.argv[1]
     id = sys.argv[2]
 
+
     # Make socket
 
     # Wrap in a protocol
@@ -254,16 +280,15 @@ if __name__ == "__main__":
         req.ad_id = id
         req.size = 4
 
-        start = time.time()
         servPort = getRecServerPort()
-        for _ in range(100000):
+        for _ in range(1000):
             print _
             sock = getRecServerSocket(servPort)
-            fetchRecByItem(sock, req)
-            # pool.run(fetchRecByItem, (sock, req,), callback=None) # 将action函数，及action的参数，callback函数传给run()方法
+            # fetchRecByItem(sock, req)
+            pool.run(fetchRecByItem, (sock, req,), callback=None) # 将action函数，及action的参数，callback函数传给run()方法
+            time.sleep(0.03)
+            #time.sleep(0.05)
         pool.close()
-        end = time.time()
-        print "cost all time: %s" % (end - start)
 
     elif command == 'fetchRecByUser':
         req = UserRequest()
@@ -274,3 +299,14 @@ if __name__ == "__main__":
         servPort = getRecServerPort()
         sock = getRecServerSocket(servPort)
         rec_ = fetchRecByUser(sock, req)
+
+    elif command == 'fetchRecByMult':
+        req = MultRequest()
+        req.user_id = id
+        req.ad_id = sys.argv[3]
+        req.city_name = 'shanghai'
+        req.first_cat = 'fang'
+        req.second_cat = 'zhengzu'
+        servPort = getRecServerPort()
+        sock = getRecServerSocket(servPort)
+        rec_ = fetchRecByMult(sock, req)
