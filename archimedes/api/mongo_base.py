@@ -83,11 +83,14 @@ class Mongo():
         result = self.write_db[collect_name].remove(search_json)
         return 'success'
 
-    def update(self, collect_name, key, update_list):
+    def update(self, collect_name, key, data):
 
+        if type(data) == dict:
+            data = [data]
         coll = self.write_db[collect_name]
-        for d in update_list:
-            coll.update({key: d[key]}, d, True)
+        for d in data:
+            print d
+            coll.update({key: d[key]}, {'$set': d}, True)
         return 'success'
 
 
