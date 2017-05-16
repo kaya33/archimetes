@@ -59,7 +59,7 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
             v = float(v)
             tmp_list.append((k, v))
         second_cat = second_cat.encode('utf-8')
-        kwdata = {"num": size,"city": city,"category": second_cat,"tag": " ".join([x[0] for x in tmp_list]),"days": 400}
+        kwdata = {"num": size,"city": city,"category": second_cat,"tag": " ".join([x[0] for x in tmp_list]),"days": 300}
         begin = datetime.datetime.now()
         user_profile = fetchKwData(kwdata)
         end = datetime.datetime.now()
