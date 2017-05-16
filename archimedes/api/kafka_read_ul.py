@@ -4,8 +4,8 @@ import threading
 import requests
 import logging
 import jieba.analyse
-from bloom_filter import Bf
-from mongo_base import Mongo
+#from bloom_filter import Bf
+#from mongo_base import Mongo
 from kafka import KafkaConsumer
 
 class Singleton(type):
@@ -51,11 +51,13 @@ class KafkaUlConsumer():
 
     def count_online_tags(self, value):
 
+        #print value
         # 1.尝试从mongo取标签
-        user_id = value['user_id']
-        ad_id = value['ad_id']
-        city = value['city']
-        category = value['category']
+        user_id = value['udid']
+        ad_id = value['adid']
+        updated_time = value['interview_time']
+        # city = value['city']
+        # category = value['category']
         mongo_driver = Mongo('chaoge', 0)
         mongo_driver.connect()
         result = mongo_driver.read('ad_content', {'_id': ad_id})
@@ -63,6 +65,7 @@ class KafkaUlConsumer():
         # 2.如果mongo有就用mongo，如果没有就取mysql，切ad 并存入mongo
         try:
             result = result.next()
+            print('read from ad content')
             kws = result['kws']
             ts = result['update_time']
             kws = self.time_decay(kws, ts)
@@ -86,6 +89,9 @@ class KafkaUlConsumer():
         # 4.拿到标签并更新在线部分
         pass
 
+
+
+
     def start_one_consumer(self):
 
         consumer = KafkaConsumer(self.topic,
@@ -93,12 +99,20 @@ class KafkaUlConsumer():
                                  bootstrap_servers=self.host,
                                 # consumer_timeout_ms=self.timeout
                                 )
-        for message in consumer:
-            print message.value
+        for index, message in enumerate(consumer):
+           # print repr(message)
+            #if index % 33333 == 0:
+            #    print index
+            #print message
             # message value and key are raw bytes -- decode if necessary!
             # e.g., for unicode: `message.value.decode('utf-8')`
+            #print repr(message.value)
+           
             tmp_json = json.loads(message.value)
-            if tmp_json['type'] == 'app_vad_traffic':
+           # print tmp_json 
+            if  tmp_json['type'] == 'app_vad_traffic':
+            #if tmp_json['type'] == 'app_vad_traffic':
+                print(tmp_json)
                 self.count_online_tags(tmp_json)
 
     def build_consumer(self):
@@ -106,7 +120,7 @@ class KafkaUlConsumer():
             self.consumer.append(threading.Thread(target=self.start_one_consumer))
             self.consumer[num].daemon = True
             self.consumer[num].start()
-            self.consumer[num].join()
+        self.consumer[num].join()
 
 
     def test(self):
