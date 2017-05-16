@@ -8,7 +8,7 @@ import os
 import sys
 import multiprocessing
 import json
-
+import datetime
 
 sys.path.append('./gen-py')
 
@@ -46,12 +46,11 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
-    print 'get mongo data'
     data = up.read_tag('RecommendationUserTagsOffline', {'user_id':user_id}, top=size)
     ## contant key word
     try:
         tags = data[first_cat][second_cat]['contant'][:1]
-        mata_tags = data[first_cat][second_cat]['mata'][:3]
+        mata_tags = data[first_cat][second_cat]['mata'][:2]
         tags.extend(mata_tags)
         tmp_list = []
         for info_tuple in tags:
@@ -60,15 +59,18 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
             v = float(v)
             tmp_list.append((k, v))
         second_cat = second_cat.encode('utf-8')
-        kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"days": 400}
+        kwdata = {"num": size,"city": city,"category": second_cat,"tag": " ".join([x[0] for x in tmp_list]),"days": 400}
+        begin = datetime.datetime.now()
         user_profile = fetchKwData(kwdata)
+        end = datetime.datetime.now()
+        print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
         user_profile = []
 
     tmp_list = []
     for info_tuple in user_profile:
         k, v = info_tuple['ad_id'], info_tuple['score']
-        tmp_list.append((k, v))
+        tmp_list.append(({"rec_id":k, "sim":v}))
     return tmp_list
 
 
@@ -185,14 +187,14 @@ class RecommenderServerHandler(object):
 
         # TODO 调用离线推荐列表数据
 
-
+        print 'data ',data
         if len(data) == 0:
             log.error("用户画像数据为空")
             res.status = responseType.ERROR
             res.err_str = "用户画像数据为空"
             return res
 
-        combine_data = sample_sort1(data)
+        combine_data = sample_sort(data)
         print combine_data
         # TODO bloom 过滤
         # bf = Bf()
@@ -200,7 +202,7 @@ class RecommenderServerHandler(object):
         # bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
         for obj in combine_data[:size]:
-            res.data.append(OneRecResult(str(obj[0]),'user_prifile'))
+            res.data.append(OneRecResult(str(obj['rec_id']),'user_prifile'))
         return res
 
     def fetchRecByMult(self,req):
@@ -225,17 +227,17 @@ class RecommenderServerHandler(object):
         city = req.city_name.encode('utf-8')
         first_cat = req.first_cat
         second_cat = req.second_cat
-        if req.size > 0:
+        try:
             size = req.size
-        else:
+        except:
             size = 3
 
         # get user tags
-        result = []
+        results = []
         try:
             pool = multiprocessing.Pool(processes=4)
-            result.append(pool.apply_async(fetch_batch_userrec, (user_id,first_cat,second_cat,city,3,)))
-            result.append(pool.apply_async(fetch_batch_itemrec,(ad_id,)))
+            results.append(pool.apply_async(fetch_batch_userrec, (user_id,first_cat,second_cat,city,3,)))
+            results.append(pool.apply_async(fetch_batch_itemrec,(ad_id,)))
             pool.close()
             pool.join()
         except Exception as e:
@@ -244,8 +246,21 @@ class RecommenderServerHandler(object):
             res.data = []
             return res
 
+        result = []
+        for tmp in results:
+            result.append(tmp.get()[:4])
+        print result
+        for obj in result[0]:
+            res.data.append(OneRecResult(obj['rec_id'], 'user_profile'))
+        for obj in result[1]:
+            res.data.append(OneRecResult(obj['rec_id'], 'itemCF'))
 
-
+        if len(res.data) == 0:
+            res.status == responseType.ERROR
+            res.err_str = "推荐结果为空"
+            res.data = []
+            return res
+        return res
 
 def main():
 

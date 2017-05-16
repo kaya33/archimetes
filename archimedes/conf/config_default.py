@@ -8,9 +8,9 @@ __author__ = 'xujiang@baixing.com'
 configs = {
     'server':{
        'port':9090,
-        'thread_num':20,
-        'thriftMaxOpenMillisecond':10,  # 设置连接的超时时间
-        'thriftMaxProcessMillisecond':100,  # 设置存取数据的超时时间
+        'thread_num':100,
+        'thriftMaxOpenMillisecond':100,  # 设置连接的超时时间
+        'thriftMaxProcessMillisecond':30000,  # 设置存取数据的超时时间
         'framedTransportMaxLength': 102410241024        # 设置最大的数据帧长度
 
     } ,
