@@ -76,7 +76,7 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         end = datetime.datetime.now()
         print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
-        log.error("获取用户画像失败")
+        log.error("获取用户画像失败, {}".format(e))
         user_profile = []
 
     tmp_list = []
