@@ -50,16 +50,18 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     print 'user_tag_data',data
     ## contant key word
+    tags = []
     try:
-        tags = data[first_cat][second_cat]['content'][:1]
+        content_tags = data[first_cat][second_cat]['content'][:1]
+        tags.extend(content_tags)
     except Exception as e:
         log.error("获取content标签失败, {}".format(e))
     try:
         mata_tags = data[first_cat][second_cat]['mata'][:2]
+        tags.extend(mata_tags)
     except Exception as e:
         log.error("获取mata标签失败")
     try:
-        tags.extend(mata_tags)
         print tags
         tmp_list = []
         for info_tuple in tags:
