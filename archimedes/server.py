@@ -279,7 +279,8 @@ def main():
         server.serve()
     except (Exception, KeyboardInterrupt) as e:
         print e
-        log.error("Execption / Keyboard interrupt occured: ", e)
+        # log.error("Execption / Keyboard interrupt occured: ", e)
+        log.error(e)
         exit(0)
 
 if __name__ == '__main__':
