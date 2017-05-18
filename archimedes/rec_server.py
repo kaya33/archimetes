@@ -60,6 +60,7 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         log.error("获取mata标签失败")
     try:
         tags.extend(mata_tags)
+        print tags
         tmp_list = []
         for info_tuple in tags:
             k, v = info_tuple
