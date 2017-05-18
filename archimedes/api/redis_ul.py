@@ -47,3 +47,8 @@ class RedisUl(redis_base.Redis):
             result = r.zrangebyscore(method + user_id, ts_min, ts_max)
 
         return result
+
+    def delete_user_list(self):
+
+        r = self.connect()
+        r.delete('user_id')
