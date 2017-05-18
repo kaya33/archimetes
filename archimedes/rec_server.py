@@ -51,8 +51,14 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     print 'user_tag_data',data
     ## contant key word
     try:
-        tags = data[first_cat][second_cat]['contant'][:1]
+        tags = data[first_cat][second_cat]['content'][:1]
+    except Exception as e:
+        log.error("获取content标签失败, {}".format(e))
+    try:
         mata_tags = data[first_cat][second_cat]['mata'][:2]
+    except Exception as e:
+        log.error("获取mata标签失败")
+    try:
         tags.extend(mata_tags)
         tmp_list = []
         for info_tuple in tags:
