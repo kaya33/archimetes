@@ -52,6 +52,8 @@ class Bf():
             p.delete()
             p.extend(self.redis_obj.select(user_id))
 
+    def delete_user_list(self):
+        self.redis_obj.delete_user_list()
 
 def test():
     a = Bf()
