@@ -46,7 +46,9 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
+    print 'user_id',user_id
     data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
+    print 'user_tag_data',data
     ## contant key word
     try:
         tags = data[first_cat][second_cat]['contant'][:1]
@@ -60,11 +62,14 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
             tmp_list.append((k, v))
         second_cat = second_cat.encode('utf-8')
         kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
+        print kwdata
         begin = datetime.datetime.now()
         user_profile = fetchKwData(kwdata)
+        print "用户画像数据：",user_profile
         end = datetime.datetime.now()
         print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
+        log.error("获取用户画像失败")
         user_profile = []
 
     tmp_list = []
@@ -178,6 +183,7 @@ class RecommenderServerHandler(object):
             size = 3
         try:
             # get user key word
+            print 'fetch batch user rec'
             data = fetch_batch_userrec(user_id=user_id,first_cat=first_cat,second_cat=second_cat,city=city,size=100)
         except Exception as e:
             res.status = responseType.ERROR
@@ -279,7 +285,7 @@ def main():
         server.serve()
     except (Exception, KeyboardInterrupt) as e:
         print e
-        log.error("Execption / Keyboard interrupt occured: ", e)
+        log.error("Execption / Keyboard interrupt occured: {}".format(e))
         exit(0)
 
 if __name__ == '__main__':
