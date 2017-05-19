@@ -23,17 +23,18 @@ with open(file_name, 'r')as f:
     for index, row in enumerate(f):
         if len(row) < 3:
             continue
-        if index % 20000 == 0:
-            print('line:{0}, time:{1}'.format(index, time.time()))
         a, b = row.split('\t')
-        tmp_dict[key] = a
+        #b = b.replace("'", '"').replace('u"', '"')
+        tmp_dict[key] = a + '&itemCF&1'
         tmp_dict['update_time'] = datetime.datetime.utcnow()
         try:
             #tmp_dict[val] = json.loads(b)
             tmp_dict[val] = ast.literal_eval(b)
         except:
-            print b
+            print(b)
             continue
+        if index % 20000 == 0:
+            print('line:{0}, time:{1}'.format(index, time.time()))
 
         try:
             mongo_driver.update(collect_name, key, dict(tmp_dict))

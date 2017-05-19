@@ -25,7 +25,7 @@ class KafkaUlConsumer():
 
     def __init__(self):
 
-        conf = json.load(open('api/conf/kafka_conf.json'))
+        conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/kafka_conf.json'))
         self.consumer = []
 
         self.host = conf['host']
@@ -33,8 +33,12 @@ class KafkaUlConsumer():
         self.timeout = conf['timeout']
         self.topic = conf['topic']
         self.consume_num = conf['consume_num']
+        self.mysql_api = conf['mysql_api']
 
     def cut_ad_content(self, title, content):
+
+        if title is None or content is None:
+            return {}
         content_set = [x for x in jieba.analyse.extract_tags(title + content + title + title + title,
                                                              topK=max(80, len(content) / 4), withWeight=True)]
         # sum_value = sum([x[1] for x in content_set])
@@ -57,20 +61,25 @@ class KafkaUlConsumer():
 
         two_day_s = 172800
         times = math.pow(0.5, (ts_now - ts) / two_day_s)
-        #try:
-        if 1:
+        try:
             tags.setdefault(top_category, {})
             tags[top_category].setdefault(category, {})
+            tags[top_category][category].setdefault('content', {})
 
-            for k3, v3 in tags_new.items():
-                k3 = k3.replace('.', '```').encode('utf-8')
-                tags[top_category][category].setdefault(k3, 0)
-                tags[top_category][category][k3] += v3 * times
-            tags[top_category][category] = dict(sorted(tags[top_category][category].items(), key=lambda d: d[1], reverse=True)[:50])
+            for k1, v1 in tags.items():
+                for k2, v2 in v1.items():
+                    for k3, v3 in v2['content'].items():
+                        tags[k1][k2]['content'][k3] = v3 * times
+                        if k1 == top_category and k2 == category:
+                            for k3_new, v3_new in tags_new.items():
+                                k3_new = k3_new.replace('.', '```')
+                                tags[k1][k2]['content'].setdefault(k3_new, 0)
+                                tags[k1][k2]['content'][k3_new] += v3_new
+                            tags[k1][k2]['content'] = dict(sorted(tags[k1][k2]['content'].items(), key=lambda d: d[1], reverse=True)[:50])
 
-        #except KeyError as e:
-        #    logging.error(e)
-        #    return tags
+        except KeyError as e:
+            logging.error(e)
+            return tags
         # 前 50
         return tags
 
@@ -96,8 +105,8 @@ class KafkaUlConsumer():
             print('read from db')
             city = ''
 
-        except:
-            get_ad_info_url = 'http://www.baixing.com/recapi/getAdInfoById?adId={}'.format(ad_id)
+        except StopIteration:
+            get_ad_info_url = self.mysql_api.format(ad_id)
             print('read from ad url')
             try:
                 request_info = json.loads(requests.get(get_ad_info_url).text)
@@ -121,7 +130,7 @@ class KafkaUlConsumer():
             online_result = online_result.next()
             tags = online_result['tags']
             ts = online_result['update_time']
-        except:
+        except StopIteration:
             tags = {}
             ts = ts_now
         tags = self.time_decay(tags, tags_new, top_category, category, city, ts, ts_now)
@@ -139,8 +148,12 @@ class KafkaUlConsumer():
                                 )
         for index, message in enumerate(consumer):
             if index % 33333 == 0:
-                print  index 
-            tmp_json = json.loads(message.value)
+                print index
+            try:
+                tmp_json = json.loads(message.value)
+            except Exception as e:
+                logging.error(e)
+                continue
             if tmp_json['type'] == 'app_vad_traffic':
                 self.count_online_tags(tmp_json['msg'])
 
