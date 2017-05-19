@@ -83,6 +83,12 @@ class Mongo():
         result = self.write_db[collect_name].remove(search_json)
         return 'success'
 
+    def expire(self, collect_name, sec):
+
+        query_obj = self.write_db[collect_name]
+        query_obj.create_index('update_time', 'expireAfterSeconds'=sec)
+        return 'success'
+
     def update(self, collect_name, key, data):
 
         if type(data) == dict:
