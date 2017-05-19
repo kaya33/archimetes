@@ -2,6 +2,7 @@ import pyreBloom
 import time
 import datetime
 import ast
+import sys
 
 from redis_ul import RedisUl
 
@@ -53,6 +54,12 @@ class Bf():
             p.extend(self.redis_obj.select(user_id))
 
     def delete_user_list(self):
+
+        user_id_list = self.redis_obj.select('user_id', num=0, method='rec')
+        user_id_list += self.redis_obj.select('user_id', num=0, method='view')
+        for user_id in user_id_list:
+            p = pyreBloom.pyreBloom(user_id, self.capacity, self.error_rate)
+            p.delete()
         self.redis_obj.delete_user_list()
 
 def test():
@@ -63,4 +70,18 @@ def test():
     # print a.filter_ad_by_user('123', ['w', 'x', 'y', 'z'])
 
 
-# test()
+def build():
+    a = Bf()
+    a.build_from_redis()
+
+
+def delete():
+    a = Bf()
+    a.delete_user_list()
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == 'del':
+        delete()
+    else:
+        build()
+
