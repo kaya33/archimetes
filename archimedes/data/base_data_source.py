@@ -25,7 +25,7 @@ def fetchKwData(data,headers=None):
             'postman-token': "82f99b3a-2fcb-527e-2f13-1b2e5c3303bc"
         }
     body = json.dumps(data, ensure_ascii=False)
-    URL = "http://www.baixing.com/recapi/getAdByKw"
+    URL = "http://www.baixing.com/recapi/getAdByKw?ENABLE_PROFILING=1"
     kwdata = WebDataSource("post", URL).fetch_data(body,headers)
     return kwdata.json()
 
