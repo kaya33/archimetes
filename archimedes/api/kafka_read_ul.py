@@ -35,6 +35,9 @@ class KafkaUlConsumer():
         self.consume_num = conf['consume_num']
 
     def cut_ad_content(self, title, content):
+
+        if title is None or content is None:
+            return {}
         content_set = [x for x in jieba.analyse.extract_tags(title + content + title + title + title,
                                                              topK=max(80, len(content) / 4), withWeight=True)]
         # sum_value = sum([x[1] for x in content_set])
@@ -140,7 +143,11 @@ class KafkaUlConsumer():
         for index, message in enumerate(consumer):
             if index % 33333 == 0:
                 print  index 
-            tmp_json = json.loads(message.value)
+            try:
+                tmp_json = json.loads(message.value)
+            except Exception as e:
+                logging.error(e)
+                continue
             if tmp_json['type'] == 'app_vad_traffic':
                 self.count_online_tags(tmp_json['msg'])
 
