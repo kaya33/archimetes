@@ -26,6 +26,7 @@ def fetchKwData(data,headers=None):
         }
     body = json.dumps(data, ensure_ascii=False)
     URL = "http://www.baixing.com/recapi/getAdByKw?ENABLE_PROFILING=1"
+    print URL
     kwdata = WebDataSource("post", URL).fetch_data(body,headers)
     return kwdata.json()
 
