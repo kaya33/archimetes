@@ -26,7 +26,7 @@ class Mongo():
         self.read_db = None
         self.write_db = None
 
-        conf = json.load(open('api/conf/mongo_conf.json'))
+        conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/mongo_conf.json'))
 
         dev_read_uri = conf['dev_read_uri']
         dev_write_uri = conf['dev_write_uri']
@@ -86,7 +86,7 @@ class Mongo():
     def expire(self, collect_name, sec):
 
         query_obj = self.write_db[collect_name]
-        query_obj.create_index('update_time', 'expireAfterSeconds'=sec)
+        query_obj.create_index('update_time', expireAfterSeconds=sec)
         return 'success'
 
     def update(self, collect_name, key, data):
@@ -95,7 +95,7 @@ class Mongo():
             data = [data]
         coll = self.write_db[collect_name]
         for d in data:
-            print d
+            #print d
             coll.update({key: d[key]}, {'$set': d}, True)
         return 'success'
 

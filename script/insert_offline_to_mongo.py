@@ -29,13 +29,15 @@ with open(file_name, 'r')as f:
         tmp_dict[key] = a
         tmp_dict['update_time'] = datetime.datetime.utcnow()
         try:
-            tmp_dict[val] = json.loads(b)
+            #tmp_dict[val] = json.loads(b)
+            tmp_dict[val] = ast.literal_eval(b)
         except:
+            print b
             continue
 
         try:
             mongo_driver.update(collect_name, key, dict(tmp_dict))
 
-        except (bson.errors.InvalidDocument, pymongo.errors.BulkWriteError):
+        except (pymongo.errors.WriteError, bson.errors.InvalidDocument, pymongo.errors.BulkWriteError):
             continue
 

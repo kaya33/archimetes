@@ -21,7 +21,7 @@ class Redis():
 
     def __init__(self):
 
-        conf = json.load(open('api/conf/redis_conf.json'))
+        conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/redis_conf.json'))
 
         self.host = conf['host']
         self.port = conf['port']

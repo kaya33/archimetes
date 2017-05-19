@@ -25,7 +25,7 @@ class KafkaUlConsumer():
 
     def __init__(self):
 
-        conf = json.load(open('api/conf/kafka_conf.json'))
+        conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/kafka_conf.json'))
         self.consumer = []
 
         self.host = conf['host']
