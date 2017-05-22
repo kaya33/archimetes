@@ -18,9 +18,8 @@ import logging
 import threading
 import time
 
-from harpc.common import utils
-
-from harpc import settings
+import settings
+from common import utils
 
 
 class LoadBalancer(object):

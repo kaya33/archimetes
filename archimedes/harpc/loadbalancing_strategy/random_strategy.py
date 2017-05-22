@@ -14,22 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import itertools
 import random
 
-from harpc.loadbalancing_strategy import LoadBalanceStrategyBase
+from archimedes.harpc.loadbalancing_strategy import LoadBalanceStrategyBase
 
 
-class RoundRobinStrategy(LoadBalanceStrategyBase):
+class RandomStrategy(LoadBalanceStrategyBase):
     def __init__(self):
         pass
 
     def offer_backends(self, backend):
         self._backend = backend[:]
-        random.shuffle(self._backend)
-        self._iterator = itertools.cycle(self._backend)
 
     def get_backend(self):
         if len(self._backend) == 0:
             raise Exception("no backends")
-        return self._iterator.next()
+        return random.choice(self._backend)

@@ -50,15 +50,15 @@ def patch_item(module, attr, newitem):
 def patch_loadbalancer():
     """Replace :func: spawn with :func:`gevent.spawn`."""
     from gevent import spawn
-    from bfd.harpc.loadbalancer import LoadBalancer
+    from archimedes.harpc.loadbalancer import LoadBalancer
     patch_item(LoadBalancer, 'spawn', spawn)
     gevent.monkey.patch_time()
 
 
 def patch_gevent():
-    from bfd.harpc import connection_pool
+    from archimedes.harpc import connection_pool
     connection_pool.ASYNC_TAG = True
-    from bfd.harpc import dynamic_host_set
+    from archimedes.harpc import dynamic_host_set
     dynamic_host_set.ASYNC_TAG = True
 
 

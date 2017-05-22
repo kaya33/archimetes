@@ -24,11 +24,6 @@ import threading
 import time
 
 import gevent
-from harpc import settings
-from harpc.common import monkey
-from harpc.common import utils
-from harpc.zkclient import HARpcZKClientManager
-from harpc.collector import StatisticsCollector
 from kazoo.client import KazooState
 from kazoo.exceptions import AuthFailedException
 from kazoo.exceptions import NoAuthException
@@ -37,6 +32,12 @@ from kazoo.security import make_digest_acl
 from thrift.protocol import TBinaryProtocol
 from thrift.transport import TSocket
 from thrift.transport import TTransport
+
+from zkclient import HARpcZKClientManager
+from collector import StatisticsCollector
+from common import monkey
+import settings
+from common import utils
 
 monkey.patch_thrift()
 

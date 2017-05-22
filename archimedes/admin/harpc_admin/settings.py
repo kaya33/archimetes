@@ -131,7 +131,7 @@ DATABASES = {
     }
 }
 
-ZK_HOSTS='172.18.1.22:2181'
+ZK_HOSTS='127.0.0.1:2181'
 
 ZK_ROOT='/harpc'
 

@@ -12,11 +12,11 @@ import sys
 
 from api.mongo_base import Mongo
 from api.user_tag import UP
+from harpc.common import config
+from harpc import server
 from conf.config_default import configs
 from core.combine_sort import sample_sort
 from data.base_data_source import fetchKwData
-from harpc import server
-from harpc.common import config
 
 sys.path.append('./gen-py')
 

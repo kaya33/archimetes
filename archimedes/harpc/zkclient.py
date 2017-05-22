@@ -16,12 +16,11 @@
 
 import threading
 
-from harpc.common import utils
 from kazoo.client import KazooClient
 from kazoo.retry import KazooRetry
 
-from harpc import settings
-
+import settings
+from common import utils
 
 class HARpcZKClientManager(KazooClient):
     __client_dict = {}

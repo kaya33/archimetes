@@ -26,7 +26,8 @@ class Mongo():
         self.read_db = None
         self.write_db = None
 
-        conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/mongo_conf.json'))
+        #conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/mongo_conf.json'))
+        conf = json.load(open('api/conf/mongo_conf.json'))
 
         dev_read_uri = conf['dev_read_uri']
         dev_write_uri = conf['dev_write_uri']

@@ -16,12 +16,12 @@
 
 import logging
 
-from harpc.common import utils
 from thrift.protocol import TBinaryProtocol
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 
-from harpc import settings
+import settings
+from common import utils
 
 ASYNC_TAG = False
 
