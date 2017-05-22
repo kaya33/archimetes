@@ -13,6 +13,7 @@ import datetime
 sys.path.append('./gen-py')
 
 import logger
+import time
 import re
 
 from recommender.ttypes import *
@@ -24,7 +25,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UP
-# from api.bloom_filter import Bf
+from api.bloom_filter import Bf
 from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
 
@@ -33,54 +34,62 @@ from data.base_data_source import fetchKwData
 
 log = logger.getLogger(__name__)
 
-reload(sys)
-sys.setdefaultencoding( "utf-8" )
-
-def chinese_word(obj):
-    return re.sub(r"\\u([a-f0-9]{4})", lambda mg: unichr(int(mg.group(1), 16)), json.dumps(obj))
-
-def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
+def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1",size=3):
     data = mongo.read("RecommendationAd",{"_id":ad_id+"&"+rec_name+"&"+id_type}).next()
     item_list = data['ads']
-    return item_list
+    return item_list[:10]
 
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     try:
-        off_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
+        on_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     except Exception as e:
-        log.error("获取离线用户标签失败, {}".format(e))
+        on_tag_data = []
 
     try:
-        on_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
+        off_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
     except Exception as e:
-        log.error("获取用户在线标签失败")
-    ## contant key word
-    tags = []
+        off_tag_data = []
+
     try:
-        off_content_tags = off_tag_data[first_cat][second_cat]['content'][:1]
-        tags.extend(off_content_tags)
+        contact_tags = None
+        online_tag = None
+        total_tag = []
+        try:
+            contact_tags = off_tag_data[first_cat][second_cat]['contact_mata'][:4]
+        except KeyError:
+            pass
+        try:
+            online_tag = on_tag_data[first_cat][second_cat]['content'][:4]
+        except KeyError:
+            pass
+        if contact_tags:
+            total_tag += contact_tags
+        if on_tag_data and len(total_tag) > 0:
+            total_tag = total_tag[:2] + online_tag[:2]
+        elif on_tag_data:
+            total_tag += online_tag
+        if len(total_tag) == 4:
+            total_tag += off_tag_data[first_cat][second_cat]['content'][:4]
     except Exception as e:
-        log.error("获取content标签失败, {}".format(e))
+        log.error("用户标签失败, {}".format(e))
+        return []
+
+    # 根据用户标签来获取帖子
     try:
-        off_mata_tags = off_tag_data[first_cat][second_cat]['mata'][:2]
-        tags.extend(off_mata_tags)
-    except Exception as e:
-        log.error("获取mata标签失败")
-    try:
-        print tags
         tmp_list = []
-        for info_tuple in tags:
+        for info_tuple in total_tag:
             k, v = info_tuple
             k = k.encode('utf-8')
             v = float(v)
             tmp_list.append((k, v))
         second_cat = second_cat.encode('utf-8')
-        kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
-        print kwdata
         begin = datetime.datetime.now()
+        kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 60}
         user_profile = fetchKwData(kwdata)
-        print "用户画像数据：",user_profile
+        if len(user_profile)<3:
+            kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
+            user_profile = fetchKwData(kwdata)
         end = datetime.datetime.now()
         print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
@@ -92,7 +101,6 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         k, v = info_tuple['ad_id'], info_tuple['score']
         tmp_list.append(({"rec_id":k, "sim":v}))
     return tmp_list
-
 
 
 mongo = Mongo('chaoge', 0)
@@ -130,7 +138,6 @@ class RecommenderServerHandler(object):
             exit(1)
 
 
-
     def fetchRecByItem(self,req):
         print(req)
         print("get the rec response by item ...")
@@ -151,21 +158,15 @@ class RecommenderServerHandler(object):
             size = req.size
         else:
             size = 3
-
         try:
             # get offline recommender data
             data = fetch_batch_itemrec(ad_id.encode('utf-8'))
-            # TODO 调用用户画像数据
-
         except Exception as e:
             res.status = responseType.ERROR
             res.err_str = "获取离线推荐数据失败"
             return res
 
-
-        # TODO 排序
         combine_data = sample_sort(data)
-        # TODO 过滤
 
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(obj['rec_id'],'itemCF'))
@@ -216,11 +217,10 @@ class RecommenderServerHandler(object):
             return res
 
         combine_data = sample_sort(data)
-        print combine_data
         # TODO bloom 过滤
-        # bf = Bf()
-        # combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        # bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
+        bf = Bf()
+        combine_data = bf.filter_ad_by_user(user_id, combine_data)
+        bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(str(obj['rec_id']),'user_prifile'))
