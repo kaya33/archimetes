@@ -267,7 +267,7 @@ if __name__ == "__main__":
         exit(-1)
     command = sys.argv[1]
     id = sys.argv[2]
-    size = sys.argv[3]
+    size = int(sys.argv[3])
 
     # Make socket
 
