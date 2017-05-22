@@ -17,6 +17,66 @@ logging.basicConfig(level=logging.DEBUG,
                     filename='../logs/zk_client.log',
                     filemode='w')
 
+logger = logging.getLogger(__name__)
+
+def fetchRecByMult(sock, req):
+
+    try:
+        resp = sock.fetchRecByMult(req)
+        print(resp)
+    except Exception as e:
+        print e
+        logger.error("ERROR while calling fetchRecByMult")
+        logger.error(e)
+        print("ERROR")
+    if resp.status == responseType.OK:
+
+        #print "Deletion of block successful"
+        logger.info("OK")
+    else:
+        #print "Deletion of block not successful"
+        logger.error("ERROR")
+
+def fetchRecByItem(sock, req):
+    try:
+        begin = datetime.datetime.now()
+        resp = sock.fetchRecByItem(req)
+        end = datetime.datetime.now()
+        print(resp)
+        print "the Thread sleep  %s sec\n" % ( end - begin)
+    except Exception as e:
+        logger.error("ERROR while calling fetchRecByItem")
+        logger.error(e)
+        print("ERROR")
+    if resp.status == responseType.OK:
+        #print "Deletion of block successful"
+        logger.info("OK")
+    else:
+        #print "Deletion of block not successful"
+        logger.error("ERROR")
+
+def fetchRecByUser(sock, req):
+    try:
+        begin = datetime.datetime.now()
+        resp = sock.fetchRecByUser(req)
+        end = datetime.datetime.now()
+        print(resp)
+        print "the rec by user cost time %s sec\n" % (end - begin)
+    except Exception as e:
+        print e
+        logger.error("ERROR while calling fetchRecByUser")
+        logger.error(e)
+        print("ERROR")
+    if resp.status == responseType.OK:
+
+        #print "Deletion of block successful"
+        logger.info("OK")
+    else:
+        #print "Deletion of block not successful"
+        logger.error("ERROR")
+        # else:
+        # print "Server said ERROR,  Meta server get list unsuccessful"
+
 if __name__ == '__main__':
     # read config file
     conf = config.Config("./conf/client.conf") #读取配置文件
