@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/mnt/sdb/archimetes/archimedes/api/bloom_filter.py", line 1, in <module>
+    import pyreBloom
+ImportError: /usr/lib64/python2.7/site-packages/pyreBloom.so: undefined symbol: PyUnicodeUCS2_DecodeUTF8

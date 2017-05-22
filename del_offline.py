@@ -1,7 +1,7 @@
 import json
 import bson
 import sys
-from src.api.mongo import Mongo
+from api.mongo_base import Mongo
 
 if len(sys.argv) < 2:
     name = 'RecommendationUserTagsOffline'

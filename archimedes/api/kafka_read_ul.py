@@ -102,12 +102,12 @@ class KafkaUlConsumer():
             top_category = result['top_category']
             category = result['category']
             #city = result['city']
-            print('read from db')
+            #print('read from db')
             city = ''
 
-        except StopIteration:
+        except (StopIteration, KeyError):
             get_ad_info_url = self.mysql_api.format(ad_id)
-            print('read from ad url')
+            #print('read from ad url')
             try:
                 request_info = json.loads(requests.get(get_ad_info_url).text)
             except Exception as e:
@@ -116,8 +116,9 @@ class KafkaUlConsumer():
             title, ad_content = request_info['title'], request_info['content']
             city, top_category, category = request_info['city'], request_info['top_category'].encode('utf-8'), request_info['category'].encode('utf-8')
             tags_new = self.cut_ad_content(title, ad_content)
-            mongo_driver.insert('ad_content', [{'_id': ad_id, 'city': city, 'top_category': top_category,
-                                                'category': category, 'update_time': ts_now, 'tags': tags_new}])
+           # mongo_driver.insert('ad_content', [{'_id': ad_id, 'city': city, 'top_category': top_category,
+           #                                     'category': category, 'update_time': ts_now, 'tags': tags_new}])
+            mongo_driver.update('ad_content', '_id', {'_id': ad_id, 'city': city, 'top_category': top_category, 'category': category, 'update_time': ts_now, 'tags': tags_new})
 
         # 3.写redis
         bf = Bf()
