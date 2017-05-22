@@ -3,6 +3,6 @@
   "group_id": "read_traffic",
   "timeout": 1000,
   "topic": "eventlog",
-  "consume_num": 2,
+  "consume_num": 3,
   "mysql_api": "http://www.baixing.com/recapi/getAdInfoById?adId={}"
 }

@@ -158,10 +158,13 @@ class KafkaUlConsumer():
             except Exception as e:
                 logging.error(e)
                 continue
-            if index % 300000 == 0:
-                print "index:{0}, time:{1}".format(index, time.strftime('%Y-%m-%d %H:%M:%S', tmp_json['msg']['interview_time']))
             if tmp_json['type'] == 'app_vad_traffic':
+                if index % 1000 == 0:
+                    print "index:{0}, time:{1}, unix_time:{2}, unix_time_now:{3}".format(index, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tmp_json['msg']['interview_time'])), tmp_json['msg']['interview_time'], time.time())
                 self.count_online_tags(tmp_json['msg'])
+                if index % 1000 == 0:
+                    print "unix_time_now:{}".format(time.time())
+                
 
     def build_consumer(self):
         for num in range(self.consume_num):
