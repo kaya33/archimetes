@@ -54,12 +54,15 @@ class KafkaUlConsumer():
         new_dict = {}
         for k, v in tmp_dict.items():
             k = k.replace('.', '```')
+            k = k.replace('$', '%^&')
             new_dict[k] = 1.0 * v / tmp_sum
         return new_dict
 
     def time_decay(self, tags, tags_new, top_category, category, city, ts, ts_now):
 
         two_day_s = 172800
+        if ts_now < ts:
+            ts_now = ts
         times = math.pow(0.5, (ts_now - ts) / two_day_s)
         try:
             tags.setdefault(top_category, {})
@@ -73,6 +76,7 @@ class KafkaUlConsumer():
                         if k1 == top_category and k2 == category:
                             for k3_new, v3_new in tags_new.items():
                                 k3_new = k3_new.replace('.', '```')
+                                k3_new = k3_new.replace('$', '%^&')
                                 tags[k1][k2]['content'].setdefault(k3_new, 0)
                                 tags[k1][k2]['content'][k3_new] += v3_new
                             tags[k1][k2]['content'] = dict(sorted(tags[k1][k2]['content'].items(), key=lambda d: d[1], reverse=True)[:50])
