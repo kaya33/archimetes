@@ -25,7 +25,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UP
-from api.bloom_filter import Bf
+# from api.bloom_filter import Bf
 from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
 
@@ -86,15 +86,16 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         second_cat = second_cat.encode('utf-8')
         begin = datetime.datetime.now()
         kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 60}
-        user_profile = fetchKwData(kwdata)
-        if len(user_profile)<3:
+        user_profile_ad = fetchKwData(kwdata)
+        print user_profile_ad
+        if len(user_profile_ad)<size:
             kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
-            user_profile = fetchKwData(kwdata)
+            user_profile_ad.extend(fetchKwData(kwdata))
         end = datetime.datetime.now()
         print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
         log.error("获取用户画像失败, {}".format(e))
-        user_profile = []
+        user_profile_ad = []
 
     tmp_list = []
     for info_tuple in user_profile:
@@ -218,9 +219,9 @@ class RecommenderServerHandler(object):
 
         combine_data = sample_sort(data)
         # TODO bloom 过滤
-        bf = Bf()
-        combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
+        # bf = Bf()
+        # combine_data = bf.filter_ad_by_user(user_id, combine_data)
+        # bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(str(obj['rec_id']),'user_prifile'))
