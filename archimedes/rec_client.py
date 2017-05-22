@@ -117,15 +117,15 @@ def fetchRecByUser(sock, req):
         # print "Server said ERROR,  Meta server get list unsuccessful"
 
 def fetchRecByMult(sock, req):
-
     try:
+        print req
         resp = sock.fetchRecByMult(req)
         print(resp)
     except Exception as e:
         print e
         log.error("ERROR while calling fetchRecByMult")
         log.error(e)
-        print("ERROR")
+        print("ERROR,{}".format(e))
     if resp.status == responseType.OK:
 
         #print "Deletion of block successful"
@@ -309,4 +309,5 @@ if __name__ == "__main__":
         req.second_cat = 'zhengzu'
         servPort = getRecServerPort()
         sock = getRecServerSocket(servPort)
+        print req
         rec_ = fetchRecByMult(sock, req)
