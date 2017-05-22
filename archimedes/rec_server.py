@@ -25,7 +25,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UP
-from api.bloom_filter import Bf
+# from api.bloom_filter import Bf
 from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
 
@@ -218,9 +218,9 @@ class RecommenderServerHandler(object):
 
         combine_data = sample_sort(data)
         # TODO bloom 过滤
-        bf = Bf()
-        combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
+        # bf = Bf()
+        # combine_data = bf.filter_ad_by_user(user_id, combine_data)
+        # bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(str(obj['rec_id']),'user_prifile'))
