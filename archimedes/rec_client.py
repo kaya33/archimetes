@@ -270,11 +270,9 @@ if __name__ == "__main__":
     command = sys.argv[1]
     id = sys.argv[2]
 
-
     # Make socket
 
     # Wrap in a protocol
-
     if command == 'fetchRecByItem':
         req = ItemRequest()
         req.ad_id = id

@@ -25,7 +25,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UP
-from api.bloom_filter import Bf
+#from api.bloom_filter import Bf
 from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
 
@@ -33,6 +33,9 @@ from utils.parse_json import get_all_keywd
 from data.base_data_source import fetchKwData
 
 log = logger.getLogger(__name__)
+
+reload(sys)
+sys.setdefaultencoding( "utf-8" )
 
 def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1",size=3):
     data = mongo.read("RecommendationAd",{"_id":ad_id+"&"+rec_name+"&"+id_type}).next()
@@ -44,12 +47,14 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     try:
         on_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     except Exception as e:
-        on_tag_data = []
+        on_tag_data = {}
 
     try:
         off_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
     except Exception as e:
-        off_tag_data = []
+        off_tag_data = {}
+
+    print off_tag_data
 
     try:
         contact_tags = None
@@ -70,7 +75,10 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         elif on_tag_data:
             total_tag += online_tag
         if len(total_tag) == 4:
-            total_tag += off_tag_data[first_cat][second_cat]['content'][:4]
+            try:
+                total_tag += off_tag_data[first_cat][second_cat]['content'][:4]
+            except KeyError:
+                pass
     except Exception as e:
         log.error("用户标签失败, {}".format(e))
         return []
@@ -86,6 +94,7 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         second_cat = second_cat.encode('utf-8')
         begin = datetime.datetime.now()
         kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 60}
+        print kwdata
         user_profile = fetchKwData(kwdata)
         if len(user_profile)<3:
             kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
@@ -218,9 +227,9 @@ class RecommenderServerHandler(object):
 
         combine_data = sample_sort(data)
         # TODO bloom 过滤
-        bf = Bf()
-        combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
+        # bf = Bf()
+        # combine_data = bf.filter_ad_by_user(user_id, combine_data)
+        # bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(str(obj['rec_id']),'user_prifile'))
