@@ -3,6 +3,7 @@ import json
 import threading
 import requests
 import logging
+import time
 import jieba.analyse
 import math
 from bloom_filter import Bf
@@ -152,13 +153,13 @@ class KafkaUlConsumer():
                                 # consumer_timeout_ms=self.timeout
                                 )
         for index, message in enumerate(consumer):
-            if index % 33333 == 0:
-                print index
             try:
                 tmp_json = json.loads(message.value)
             except Exception as e:
                 logging.error(e)
                 continue
+            if index % 300000 == 0:
+                print "index:{0}, time:{1}".format(index, time.strftime(format, tmp_json['msg']['interview_time']))
             if tmp_json['type'] == 'app_vad_traffic':
                 self.count_online_tags(tmp_json['msg'])
 
