@@ -57,8 +57,8 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
     print off_tag_data
 
     try:
-        contact_tags = None
-        online_tag = None
+        contact_tags = []
+        online_tag = []
         total_tag = []
         try:
             contact_tags = off_tag_data[first_cat][second_cat]['contact_mata'][:4]
@@ -68,11 +68,11 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
             online_tag = on_tag_data[first_cat][second_cat]['content'][:4]
         except KeyError:
             pass
-        if contact_tags:
+        if len(contact_tags) == 0:
             total_tag += contact_tags
-        if on_tag_data and len(total_tag) > 0:
+        if len(on_tag_data) == 0 and len(total_tag) > 0:
             total_tag = total_tag[:2] + online_tag[:2]
-        elif on_tag_data:
+        elif len(on_tag_data) == 0:
             total_tag += online_tag
         if len(total_tag) == 4:
             try:
