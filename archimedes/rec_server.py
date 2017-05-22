@@ -46,19 +46,25 @@ def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1"):
 
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
-    print 'user_id',user_id
-    data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
-    print 'user_tag_data',data
+    try:
+        off_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
+    except Exception as e:
+        log.error("获取离线用户标签失败, {}".format(e))
+
+    try:
+        on_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
+    except Exception as e:
+        log.error("获取用户在线标签失败")
     ## contant key word
     tags = []
     try:
-        content_tags = data[first_cat][second_cat]['content'][:1]
-        tags.extend(content_tags)
+        off_content_tags = off_tag_data[first_cat][second_cat]['content'][:1]
+        tags.extend(off_content_tags)
     except Exception as e:
         log.error("获取content标签失败, {}".format(e))
     try:
-        mata_tags = data[first_cat][second_cat]['mata'][:2]
-        tags.extend(mata_tags)
+        off_mata_tags = off_tag_data[first_cat][second_cat]['mata'][:2]
+        tags.extend(off_mata_tags)
     except Exception as e:
         log.error("获取mata标签失败")
     try:

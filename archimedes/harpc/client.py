@@ -7,18 +7,18 @@ import re
 import socket
 import time
 
-from harpc import settings
-from harpc.common import utils
-from harpc.connection_pool import ConnectionPool
-from harpc.dynamic_host_set import DynamicHostSet
-from harpc.exceptions import RpcException
-from harpc.loadbalancer import LoadBalancer
-from harpc.zkclient import HARpcZKClientManager
 from kazoo.client import KazooState
 from kazoo.recipe.watchers import ChildrenWatch
 from thrift.transport import TTransport
 
-from harpc.collector import StatisticsCollector
+from connection_pool import ConnectionPool
+from dynamic_host_set import DynamicHostSet
+from zkclient import HARpcZKClientManager
+from loadbalancer import LoadBalancer
+from exceptions import RpcException
+from collector import StatisticsCollector
+import settings
+from common import utils
 
 
 class Client(object):

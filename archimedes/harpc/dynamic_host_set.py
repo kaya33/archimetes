@@ -17,7 +17,7 @@
 import logging
 import socket
 
-from harpc import settings
+import settings
 
 ASYNC_TAG = False
 

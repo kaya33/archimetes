@@ -16,9 +16,6 @@ limitations under the License.
 
 from django.conf.urls import patterns, url
 
-__author__ = 'caojingwei'
-
-
 urlpatterns = patterns('manage.views',
                        url(r"^ajax_login$","ajax_login"),
                        url(r"^userLogout$","userLogout"),

@@ -20,7 +20,7 @@ from django.utils.six import wraps
 from django.utils.decorators import available_attrs
 from manage.lib.zk_harpc import ZK_HARPC
 
-__author__ = 'caojingwei'
+__author__ = 'xujiang@baixing.com'
 
 
 
