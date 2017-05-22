@@ -262,13 +262,12 @@ if __name__ == "__main__":
 
     def callback(status, result):
         pass
-
-
     if len(sys.argv) < 2:
         log.error("Invocation : <executable> <config_file> <command> <item_id/user_id>")
         exit(-1)
     command = sys.argv[1]
     id = sys.argv[2]
+    size = sys.argv[3]
 
     # Make socket
 
@@ -276,7 +275,7 @@ if __name__ == "__main__":
     if command == 'fetchRecByItem':
         req = ItemRequest()
         req.ad_id = id
-        req.size = 4
+        req.size = size
 
         servPort = getRecServerPort()
         for _ in range(1000):
@@ -294,6 +293,7 @@ if __name__ == "__main__":
         req.city_name = 'shanghai'
         req.first_cat = 'fang'
         req.second_cat = 'zhengzu'
+        req.size = size
         servPort = getRecServerPort()
         sock = getRecServerSocket(servPort)
         rec_ = fetchRecByUser(sock, req)
@@ -301,7 +301,7 @@ if __name__ == "__main__":
     elif command == 'fetchRecByMult':
         req = MultRequest()
         req.user_id = id
-        req.ad_id = sys.argv[3]
+        req.ad_id = sys.argv[4]
         req.city_name = 'shanghai'
         req.first_cat = 'fang'
         req.second_cat = 'zhengzu'
