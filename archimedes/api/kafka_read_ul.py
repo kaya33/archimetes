@@ -43,7 +43,9 @@ class KafkaUlConsumer():
 
     def cut_ad_content(self, title, content):
 
-        if title is None or content is None:
+        title = title if title else ''
+        content = content if content else ''
+        if len(title) == 0 and len(content) == 0:
             return {}
         content_set = [x for x in jieba.analyse.extract_tags(title + content + title + title + title,
                                                              topK=max(80, len(content) / 4), withWeight=True)]
@@ -58,6 +60,8 @@ class KafkaUlConsumer():
         tmp_dict = dict(sorted(to_one_dict.items(),
                                key=lambda d: d[1], reverse=True)[:8])
         tmp_sum = sum([x[1] for x in tmp_dict.items()])
+        if tmp_sum == 0:
+            tmp_sum = 1
         new_dict = {}
         for k, v in tmp_dict.items():
             k = k.replace('.', '```')
@@ -76,17 +80,19 @@ class KafkaUlConsumer():
             ts = tags[top_category][category].get('update_time', ts_now)
             if ts_now < ts:
                 ts_now = ts
-            times = math.pow(2, (ts_now - ts) / two_day_s)
+            times_num = math.pow(2, (ts_now - ts) / two_day_s)
 
             for k, v in {'content': tags_new, 'meta': meta}.items():
                 for k3_new, v3_new in v.items():
                     k3_new = k3_new.replace('.', '```')
                     k3_new = k3_new.replace('$', '%^&')
                     tags[top_category][category][k].setdefault(k3_new, 0)
-                    tags[top_category][category][k][k3_new] += v3_new * times
+                    tags[top_category][category][k][k3_new] += v3_new * times_num
                 tmp_list = sorted(tags[top_category][category][k].items(), key=lambda d: d[1], reverse=True)[:50]
-                to_one_val = sum([v for (k, v) in tmp_list])
-                tags[top_category][category][k] = dict([(k, v / to_one_val) for (k, v) in tmp_list])
+                to_one_val = sum([v_tmp for (k_tmp, v_tmp) in tmp_list])
+                if to_one_val == 0:
+                    to_one_val = 1
+                tags[top_category][category][k] = dict([(k_tmp, v_tmp / to_one_val) for (k_tmp, v_tmp) in tmp_list])
             tags[top_category][category]['update_time'] = ts_now
 
         except KeyError as e:
@@ -100,8 +106,9 @@ class KafkaUlConsumer():
         result = {}
         if type(meta) != dict:
             logging.warning('[online tag]meta is not dict:'.format(meta))
-        sum = 1.0 / len([x[1] for x in meta.items() if x[1]])
-        return dict([(k.replace('.', '```').replace('$', '%^&'), sum) for _, k in meta.items() if k])
+        sum_num = len([x[1] for x in meta.items() if x[1]])
+        avg_num = 1.0 / sum_num if sum_num > 0 else 1
+        return dict([(k.replace('.', '```').replace('$', '%^&'), 1) for _, k in meta.items() if k])
 
 
     def get_ad_info_from_api(self, ad_id):
@@ -140,7 +147,7 @@ class KafkaUlConsumer():
             top_category = result['top_category']
             category = result['category']
             meta = result['meta']
-            assert time.time() - float(datetime.datetime.strftime(result['update_time'], '%s')) < 604800
+            assert time.time() - result['update_time'] < 604800
             #city = result['city']
             #print('read from db')
             city = ''
@@ -150,7 +157,7 @@ class KafkaUlConsumer():
             mongo_driver = Mongo('chaoge', 0)
             mongo_driver.connect()
 
-            val = self.get_ad_info_from_api(user_id)
+            val = self.get_ad_info_from_api(ad_id)
             if len(val) == 0:
                 return
             else:
@@ -161,7 +168,7 @@ class KafkaUlConsumer():
             if type(meta) == list:
                 meta = {}
             meta = self.count_meta_value(meta)
-
+            #print {'_id': ad_id, 'city': city, 'top_category': top_category, 'category': category, 'update_time': ts_now, 'tags': tags_new, 'meta': meta}
             mongo_driver.update('ad_content', '_id', {'_id': ad_id, 'city': city, 'top_category': top_category,
                                                       'category': category, 'update_time': ts_now, 'tags': tags_new,
                                                       'meta': meta})
@@ -182,6 +189,7 @@ class KafkaUlConsumer():
 
         tags = self.time_decay(
             tags, tags_new, meta, top_category, category, city, ts_now)
+        #print {'_id': user_id, 'update_time': ts_now, 'tags': tags}
         mongo_driver.update('RecommendationUserTagsOnline', '_id', {
                             '_id': user_id, 'update_time': ts_now, 'tags': tags})
 
