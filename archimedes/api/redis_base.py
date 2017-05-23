@@ -1,6 +1,7 @@
 import redis
 import json
 import logging
+from conf.config_default import configs
 
 # maxmemory 4096mb
 # maxmemory-policy allkeys-lru
@@ -23,10 +24,8 @@ class Redis():
 
     def __init__(self):
 
-        conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/redis_conf.json'))
-
-        self.host = conf['host']
-        self.port = conf['port']
+        self.host = configs.get('redis', {}).get('host', 'localhost')
+        self.port = configs.get('redis', {}).get('port', 6379)
         try:
             self.pool = redis.ConnectionPool(host=self.host, port=self.port)
         except Exception as e:

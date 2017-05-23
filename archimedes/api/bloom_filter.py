@@ -6,6 +6,7 @@ import logging
 import sys
 from redis_base import Redis
 from user_log import UserLog
+from conf.config_default import configs
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s-%(name)s-%(levelname)s-%(message)s")
 # maxmemory 4096mb
@@ -27,9 +28,9 @@ class BloomFilter():
 
     def __init__(self):
 
-        self.capacity = 3000
-        self.error_rate = 0.01
-        self.rebuild_time = 86400
+        self.capacity = configs.get('bloom_filter', {}).get('capacity', 3000)
+        self.error_rate = configs.get('bloom_filter', {}).get('error_rate', 0.01)
+        self.rebuild_time = configs.get('bloom_filter', {}).get('rebuild_time', 86400)
         self.redis_obj = UserLog()
         self.redis_base_obj = Redis()
 

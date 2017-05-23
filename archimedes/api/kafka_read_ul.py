@@ -10,6 +10,7 @@ import datetime
 from bloom_filter import BloomFilter
 from mongo_base import Mongo
 from kafka import KafkaConsumer
+from conf.config_default import configs
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s-%(name)s-%(levelname)s-%(message)s")
 
@@ -31,16 +32,14 @@ class KafkaUlConsumer():
 
     def __init__(self):
 
-        conf = json.load(
-            open('/mnt/sdb/archimetes/archimedes/api/conf/kafka_conf.json'))
         self.consumer = []
 
-        self.host = conf['host']
-        self.group_id = conf['group_id']
-        self.timeout = conf['timeout']
-        self.topic = conf['topic']
-        self.consume_num = conf['consume_num']
-        self.mysql_api = conf['mysql_api']
+        self.host = configs.get('kafka_online_tag', {}).get("host", 'bj2-kafka01:9092')
+        self.group_id = configs.get('kafka_online_tag', {}).get("group_id", 'read_traffic')
+        self.timeout = configs.get('kafka_online_tag', {}).get("timeout", 1000)
+        self.topic = configs.get('kafka_online_tag', {}).get("topic", 'eventlog')
+        self.consume_num = configs.get('kafka_online_tag', {}).get("consume_num", 1)
+        self.mysql_api = configs.get('kafka_online_tag', {}).get("mysql_api")
 
     def cut_ad_content(self, title, content):
 
@@ -180,7 +179,7 @@ class KafkaUlConsumer():
 
         except StopIteration:
             tags = {}
-            
+
         tags = self.time_decay(
             tags, tags_new, meta, top_category, category, city, ts_now)
         mongo_driver.update('RecommendationUserTagsOnline', '_id', {

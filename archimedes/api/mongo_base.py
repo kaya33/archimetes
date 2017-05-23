@@ -2,6 +2,7 @@
 import pymongo
 import json
 import logging
+from conf.config_default import configs
 from pymongo import MongoClient, ReplaceOne
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s-%(name)s-%(levelname)s-%(message)s")
@@ -27,16 +28,13 @@ class Mongo():
         self.read_db = None
         self.write_db = None
 
-        #conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/mongo_conf.json'))
-        conf = json.load(open('api/conf/mongo_conf.json'))
-
         if is_prod:
-            self.read_uri = conf['prod_read_uri']
-            self.write_uri = conf['prod_write_uri']
+            self.read_uri = configs.get('mongo').get('prod_read_uri')
+            self.write_uri = configs.get('mongo').get('prod_write_uri')
 
         else:
-            self.read_uri = conf['dev_read_uri']
-            self.write_uri = conf['dev_write_uri']
+            self.read_uri = configs.get('mongo').get('dev_read_uri')
+            self.write_uri = configs.get('mongo').get('dev_write_uri')
 
     def connect(self):
         if self.read_db is None:

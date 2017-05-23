@@ -1,6 +1,0 @@
-{
-    "dev_read_uri": "mongodb://127.0.0.1:27017",
-    "dev_write_uri": "mongodb://127.0.0.1:27017",
-    "pro_read_uri": "mongodb://127.0.0.1:27017",
-    "pro_write_uri": "mongodb://127.0.0.1:27017"
-}
