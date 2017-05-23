@@ -1,8 +1,0 @@
-{
-  "host": ["bj2-kafka01:9092", "bj2-kafka02:9093", "bj2-kafka03:9094"],
-  "group_id": "read_traffic",
-  "timeout": 1000,
-  "topic": "eventlog",
-  "consume_num": 3,
-  "mysql_api": "http://www.baixing.com/recapi/getAdInfoById?adId={}"
-}

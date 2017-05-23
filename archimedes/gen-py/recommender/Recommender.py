@@ -103,6 +103,10 @@ class Client(Iface):
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
+        if result.sys_exc is not None:
+            raise result.sys_exc
+        if result.code_exc is not None:
+            raise result.code_exc
         raise TApplicationException(TApplicationException.MISSING_RESULT, "fetchRecByItem failed: unknown result")
 
     def fetchRecByUser(self, req):
@@ -134,6 +138,10 @@ class Client(Iface):
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
+        if result.sys_exc is not None:
+            raise result.sys_exc
+        if result.code_exc is not None:
+            raise result.code_exc
         raise TApplicationException(TApplicationException.MISSING_RESULT, "fetchRecByUser failed: unknown result")
 
     def fetchRecByMult(self, req):
@@ -165,6 +173,10 @@ class Client(Iface):
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
+        if result.sys_exc is not None:
+            raise result.sys_exc
+        if result.code_exc is not None:
+            raise result.code_exc
         raise TApplicationException(TApplicationException.MISSING_RESULT, "fetchRecByMult failed: unknown result")
 
 
@@ -221,6 +233,12 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
+        except SystemException as sys_exc:
+            msg_type = TMessageType.REPLY
+            result.sys_exc = sys_exc
+        except CodeException as code_exc:
+            msg_type = TMessageType.REPLY
+            result.code_exc = code_exc
         except Exception as ex:
             msg_type = TMessageType.EXCEPTION
             logging.exception(ex)
@@ -240,6 +258,12 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
+        except SystemException as sys_exc:
+            msg_type = TMessageType.REPLY
+            result.sys_exc = sys_exc
+        except CodeException as code_exc:
+            msg_type = TMessageType.REPLY
+            result.code_exc = code_exc
         except Exception as ex:
             msg_type = TMessageType.EXCEPTION
             logging.exception(ex)
@@ -259,6 +283,12 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
+        except SystemException as sys_exc:
+            msg_type = TMessageType.REPLY
+            result.sys_exc = sys_exc
+        except CodeException as code_exc:
+            msg_type = TMessageType.REPLY
+            result.code_exc = code_exc
         except Exception as ex:
             msg_type = TMessageType.EXCEPTION
             logging.exception(ex)
@@ -437,14 +467,20 @@ class fetchRecByItem_result(object):
     """
     Attributes:
      - success
+     - sys_exc
+     - code_exc
     """
 
     thrift_spec = (
         (0, TType.STRUCT, 'success', (RecResponse, RecResponse.thrift_spec), None, ),  # 0
+        (1, TType.STRUCT, 'sys_exc', (SystemException, SystemException.thrift_spec), None, ),  # 1
+        (2, TType.STRUCT, 'code_exc', (CodeException, CodeException.thrift_spec), None, ),  # 2
     )
 
-    def __init__(self, success=None,):
+    def __init__(self, success=None, sys_exc=None, code_exc=None,):
         self.success = success
+        self.sys_exc = sys_exc
+        self.code_exc = code_exc
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -461,6 +497,18 @@ class fetchRecByItem_result(object):
                     self.success.read(iprot)
                 else:
                     iprot.skip(ftype)
+            elif fid == 1:
+                if ftype == TType.STRUCT:
+                    self.sys_exc = SystemException()
+                    self.sys_exc.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.code_exc = CodeException()
+                    self.code_exc.read(iprot)
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -474,6 +522,14 @@ class fetchRecByItem_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRUCT, 0)
             self.success.write(oprot)
+            oprot.writeFieldEnd()
+        if self.sys_exc is not None:
+            oprot.writeFieldBegin('sys_exc', TType.STRUCT, 1)
+            self.sys_exc.write(oprot)
+            oprot.writeFieldEnd()
+        if self.code_exc is not None:
+            oprot.writeFieldBegin('code_exc', TType.STRUCT, 2)
+            self.code_exc.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -558,14 +614,20 @@ class fetchRecByUser_result(object):
     """
     Attributes:
      - success
+     - sys_exc
+     - code_exc
     """
 
     thrift_spec = (
         (0, TType.STRUCT, 'success', (RecResponse, RecResponse.thrift_spec), None, ),  # 0
+        (1, TType.STRUCT, 'sys_exc', (SystemException, SystemException.thrift_spec), None, ),  # 1
+        (2, TType.STRUCT, 'code_exc', (CodeException, CodeException.thrift_spec), None, ),  # 2
     )
 
-    def __init__(self, success=None,):
+    def __init__(self, success=None, sys_exc=None, code_exc=None,):
         self.success = success
+        self.sys_exc = sys_exc
+        self.code_exc = code_exc
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -582,6 +644,18 @@ class fetchRecByUser_result(object):
                     self.success.read(iprot)
                 else:
                     iprot.skip(ftype)
+            elif fid == 1:
+                if ftype == TType.STRUCT:
+                    self.sys_exc = SystemException()
+                    self.sys_exc.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.code_exc = CodeException()
+                    self.code_exc.read(iprot)
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -595,6 +669,14 @@ class fetchRecByUser_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRUCT, 0)
             self.success.write(oprot)
+            oprot.writeFieldEnd()
+        if self.sys_exc is not None:
+            oprot.writeFieldBegin('sys_exc', TType.STRUCT, 1)
+            self.sys_exc.write(oprot)
+            oprot.writeFieldEnd()
+        if self.code_exc is not None:
+            oprot.writeFieldBegin('code_exc', TType.STRUCT, 2)
+            self.code_exc.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -679,14 +761,20 @@ class fetchRecByMult_result(object):
     """
     Attributes:
      - success
+     - sys_exc
+     - code_exc
     """
 
     thrift_spec = (
         (0, TType.STRUCT, 'success', (RecResponse, RecResponse.thrift_spec), None, ),  # 0
+        (1, TType.STRUCT, 'sys_exc', (SystemException, SystemException.thrift_spec), None, ),  # 1
+        (2, TType.STRUCT, 'code_exc', (CodeException, CodeException.thrift_spec), None, ),  # 2
     )
 
-    def __init__(self, success=None,):
+    def __init__(self, success=None, sys_exc=None, code_exc=None,):
         self.success = success
+        self.sys_exc = sys_exc
+        self.code_exc = code_exc
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -703,6 +791,18 @@ class fetchRecByMult_result(object):
                     self.success.read(iprot)
                 else:
                     iprot.skip(ftype)
+            elif fid == 1:
+                if ftype == TType.STRUCT:
+                    self.sys_exc = SystemException()
+                    self.sys_exc.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.code_exc = CodeException()
+                    self.code_exc.read(iprot)
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -716,6 +816,14 @@ class fetchRecByMult_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRUCT, 0)
             self.success.write(oprot)
+            oprot.writeFieldEnd()
+        if self.sys_exc is not None:
+            oprot.writeFieldBegin('sys_exc', TType.STRUCT, 1)
+            self.sys_exc.write(oprot)
+            oprot.writeFieldEnd()
+        if self.code_exc is not None:
+            oprot.writeFieldBegin('code_exc', TType.STRUCT, 2)
+            self.code_exc.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()

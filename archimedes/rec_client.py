@@ -291,8 +291,8 @@ if __name__ == "__main__":
         req = UserRequest()
         req.user_id = id
         req.city_name = 'shanghai'
-        req.first_cat = 'fang'
-        req.second_cat = 'zhengzu'
+        req.first_category = 'fang'
+        req.second_category = 'zhengzu'
         req.size = size
         servPort = getRecServerPort()
         sock = getRecServerSocket(servPort)
