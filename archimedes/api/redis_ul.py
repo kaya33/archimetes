@@ -16,6 +16,7 @@ class RedisUl(redis_base.Redis):
             expire_time = 1209600
         else:
             expire_time = 43200
+            # 一个月
 
         ts = time.time()
         tmp_list = []
@@ -27,17 +28,17 @@ class RedisUl(redis_base.Redis):
         for x in ad_id:
             tmp_list.append(ts)
             tmp_list.append(x)
-
+#sorted
         r.zadd(method + user_id, *tmp_list)
         r.zadd(method + 'user_id', ts, user_id)
         r.expire(method + user_id, expire_time)
 
-    def select(self, user_id, num=None, dt='', method='rec'):
-
+    def select(self, user_id, num=None, dt='', method='view'):
+# 111
         r = self.connect()
         if dt == '' and num is not None:
             result = r.zrange(method + user_id, -num, -1)
-        elif num is None:
+        elif dt == '' and num is None:
             ts_min = float((datetime.date.today() - datetime.timedelta(14)).strftime("%s"))
             ts_max = time.time()
             result = r.zrangebyscore(method + user_id, ts_min, ts_max)

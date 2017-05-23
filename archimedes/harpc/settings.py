@@ -18,7 +18,7 @@
 common config
 """
 # zk_path_setting
-DEFAULT_ZK_NAMESPACE_SERVERS = "servers"
+DEFAULT_ZK_NAMESPACE_SERVERS = "rec_servers"
 DEFAULT_ZK_NAMESPACE_ROOT = "harpc"
 DEFAULT_ZK_NAMESPACE_STATISTICS = "statistics"
 DEFAULT_ZK_NAMESPACE_CLIENTS = "clients"

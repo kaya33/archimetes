@@ -25,7 +25,7 @@ from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UP
-#from api.bloom_filter import Bf
+from api.bloom_filter import Bf
 from core.combine_sort import sample_sort,sample_sort1
 from conf.config_default import configs
 
@@ -40,7 +40,7 @@ sys.setdefaultencoding( "utf-8" )
 def fetch_batch_itemrec(ad_id, rec_name = "itemCF", id_type = "1",size=3):
     data = mongo.read("RecommendationAd",{"_id":ad_id+"&"+rec_name+"&"+id_type}).next()
     item_list = data['ads']
-    return item_list[:10]
+    return item_list[:size]
 
 
 def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
@@ -68,13 +68,13 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
             online_tag = on_tag_data[first_cat][second_cat]['content'][:4]
         except KeyError:
             pass
-        if len(contact_tags) == 0:
+        if len(contact_tags) != 0:
             total_tag += contact_tags
-        if len(on_tag_data) == 0 and len(total_tag) > 0:
+        if len(on_tag_data) != 0 and len(total_tag) > 0:
             total_tag = total_tag[:2] + online_tag[:2]
-        elif len(on_tag_data) == 0:
+        elif len(on_tag_data) != 0:
             total_tag += online_tag
-        if len(total_tag) == 4:
+        if len(total_tag) == 0:
             try:
                 total_tag += off_tag_data[first_cat][second_cat]['content'][:4]
             except KeyError:
@@ -95,10 +95,11 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         begin = datetime.datetime.now()
         kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 60}
         user_profile_ad = fetchKwData(kwdata)
-        print user_profile_ad
         if len(user_profile_ad)<size:
             kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
             user_profile_ad.extend(fetchKwData(kwdata))
+            #
+
         end = datetime.datetime.now()
         print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
@@ -110,7 +111,6 @@ def fetch_batch_userrec(user_id,first_cat,second_cat,city=None,size=3):
         k, v = info_tuple['ad_id'], info_tuple['score']
         tmp_list.append(({"rec_id":k, "sim":v}))
     return tmp_list
-
 
 mongo = Mongo('chaoge', 0)
 up = UP('chaoge', 0)
@@ -188,7 +188,8 @@ class RecommenderServerHandler(object):
         print("get the rec response by user ...")
 
         res = RecResponse()
-        res.status = responseType.OK
+        res.status = responseType.OK:q
+
         res.err_str = ""
         res.data = []
 
@@ -200,8 +201,8 @@ class RecommenderServerHandler(object):
 
         user_id = req.user_id.encode('utf-8')
         city = req.city_name.encode('utf-8')
-        first_cat = req.first_cat
-        second_cat = req.second_cat
+        first_cate = req.first_cate
+        second_cate = req.second_cate
         if req.size > 0:
             size = req.size
         else:
@@ -226,13 +227,14 @@ class RecommenderServerHandler(object):
             return res
 
         combine_data = sample_sort(data)
+
         # TODO bloom 过滤
-        # bf = Bf()
-        # combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        # bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
+        bf = Bf()
+        combine_data = bf.filter_ad_by_user(user_id, combine_data)
+        bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
         for obj in combine_data[:size]:
-            res.data.append(OneRecResult(str(obj['rec_id']),'user_prifile'))
+            res.data.append(OneRecResult(str(obj['rec_id']),'user_profile'))
         return res
 
     def fetchRecByMult(self,req):
@@ -265,9 +267,9 @@ class RecommenderServerHandler(object):
         # get user tags
         results = []
         try:
-            pool = multiprocessing.Pool(processes=4)
-            results.append(pool.apply_async(fetch_batch_userrec, (user_id,first_cat,second_cat,city,3,)))
-            results.append(pool.apply_async(fetch_batch_itemrec,(ad_id,)))
+            pool = multiprocessing.Pool(processes=2)
+            results.append(pool.apply_async(fetch_batch_userrec, (user_id,first_cat,second_cat,city,size,)))
+            results.append(pool.apply_async(fetch_batch_itemrec,(ad_id,size,)))
             pool.close()
             pool.join()
         except Exception as e:
@@ -277,13 +279,13 @@ class RecommenderServerHandler(object):
             return res
 
         result = []
-        for tmp in results:
-            result.append(tmp.get()[:4])
+
         print result
-        for obj in result[0]:
+        for obj in results[0]:
             res.data.append(OneRecResult(obj['rec_id'], 'user_profile'))
-        for obj in result[1]:
+        for obj in results[1]:
             res.data.append(OneRecResult(obj['rec_id'], 'itemCF'))
+        # TODO 协同过滤，优先
 
         if len(res.data) == 0:
             res.status == responseType.ERROR
