@@ -13,12 +13,11 @@ class UserLog(redis_base.Redis):
         if method not in ['rec', 'view']:
             logging.error('redis method is invalid')
             return []
-        # two weeks
+        # two weeks and 30 days
         if method == 'rec':
             expire_time = 1209600
         else:
             expire_time = 2592000
-            # 一个月
 
         ts = time.time()
         tmp_list = []
