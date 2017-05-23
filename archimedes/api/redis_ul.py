@@ -16,7 +16,6 @@ class RedisUl(redis_base.Redis):
             expire_time = 1209600
         else:
             expire_time = 43200
-            # 一个月
 
         ts = time.time()
         tmp_list = []

@@ -14,6 +14,9 @@ configs = {
         'framedTransportMaxLength': 102410241024        # 设置最大的数据帧长度
 
     } ,
+    'user_profile':{
+        'kw_size':4   #  user how many keywords to get post
+    } ,
     'kafka': {
         'host': ['bj2-kafka01:9092','bj2-kafka02:9093','bj2-kafka03:9094'],
         'topic': 'eventlog',
