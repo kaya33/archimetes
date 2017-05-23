@@ -10,13 +10,15 @@ from bloom_filter import Bf
 from mongo_base import Mongo
 from kafka import KafkaConsumer
 
+
 class Singleton(type):
 
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(
+                Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -26,7 +28,8 @@ class KafkaUlConsumer():
 
     def __init__(self):
 
-        conf = json.load(open('/mnt/sdb/archimetes/archimedes/api/conf/kafka_conf.json'))
+        conf = json.load(
+            open('/mnt/sdb/archimetes/archimedes/api/conf/kafka_conf.json'))
         self.consumer = []
 
         self.host = conf['host']
@@ -50,7 +53,8 @@ class KafkaUlConsumer():
             if tmp_weight > 600:
                 to_one_dict[all_set[0]] = int(tmp_weight)
         # 前8
-        tmp_dict = dict(sorted(to_one_dict.items(), key=lambda d: d[1], reverse=True)[:8])
+        tmp_dict = dict(sorted(to_one_dict.items(),
+                               key=lambda d: d[1], reverse=True)[:8])
         tmp_sum = sum([x[1] for x in tmp_dict.items()])
         new_dict = {}
         for k, v in tmp_dict.items():
@@ -80,7 +84,8 @@ class KafkaUlConsumer():
                                 k3_new = k3_new.replace('$', '%^&')
                                 tags[k1][k2]['content'].setdefault(k3_new, 0)
                                 tags[k1][k2]['content'][k3_new] += v3_new
-                            tags[k1][k2]['content'] = dict(sorted(tags[k1][k2]['content'].items(), key=lambda d: d[1], reverse=True)[:50])
+                            tags[k1][k2]['content'] = dict(
+                                sorted(tags[k1][k2]['content'].items(), key=lambda d: d[1], reverse=True)[:50])
 
         except KeyError as e:
             logging.error(e)
@@ -119,19 +124,21 @@ class KafkaUlConsumer():
                 logging.error(e)
                 return
             title, ad_content = request_info['title'], request_info['content']
-            city, top_category, category = request_info['city'], request_info['top_category'].encode('utf-8'), request_info['category'].encode('utf-8')
+            city, top_category, category = request_info['city'], request_info[
+                'top_category'].encode('utf-8'), request_info['category'].encode('utf-8')
             tags_new = self.cut_ad_content(title, ad_content)
            # mongo_driver.insert('ad_content', [{'_id': ad_id, 'city': city, 'top_category': top_category,
            #                                     'category': category, 'update_time': ts_now, 'tags': tags_new}])
-            mongo_driver.update('ad_content', '_id', {'_id': ad_id, 'city': city, 'top_category': top_category, 'category': category, 'update_time': ts_now, 'tags': tags_new})
+            mongo_driver.update('ad_content', '_id', {
+                                '_id': ad_id, 'city': city, 'top_category': top_category, 'category': category, 'update_time': ts_now, 'tags': tags_new})
 
         # 3.写redis
         bf = Bf()
         bf.save(user_id, ad_id, method='view')
 
-
         # 4.拿到标签并更新在线部分
-        online_result = mongo_driver.read('RecommendationUserTagsOnline', {'_id': user_id})
+        online_result = mongo_driver.read(
+            'RecommendationUserTagsOnline', {'_id': user_id})
         try:
             online_result = online_result.next()
             tags = online_result['tags']
@@ -139,19 +146,18 @@ class KafkaUlConsumer():
         except StopIteration:
             tags = {}
             ts = ts_now
-        tags = self.time_decay(tags, tags_new, top_category, category, city, ts, ts_now)
-        mongo_driver.update('RecommendationUserTagsOnline', '_id', {'_id': user_id, 'update_time': ts_now, 'tags': tags})
-
-
-
+        tags = self.time_decay(
+            tags, tags_new, top_category, category, city, ts, ts_now)
+        mongo_driver.update('RecommendationUserTagsOnline', '_id', {
+                            '_id': user_id, 'update_time': ts_now, 'tags': tags})
 
     def start_one_consumer(self):
 
         consumer = KafkaConsumer(self.topic,
                                  group_id=self.group_id,
                                  bootstrap_servers=self.host,
-                                # consumer_timeout_ms=self.timeout
-                                )
+                                 # consumer_timeout_ms=self.timeout
+                                 )
         for index, message in enumerate(consumer):
             try:
                 tmp_json = json.loads(message.value)
@@ -168,14 +174,15 @@ class KafkaUlConsumer():
 
     def build_consumer(self):
         for num in range(self.consume_num):
-            self.consumer.append(threading.Thread(target=self.start_one_consumer))
+            self.consumer.append(threading.Thread(
+                target=self.start_one_consumer))
             self.consumer[num].daemon = True
             self.consumer[num].start()
         self.consumer[num].join()
 
-
     def test(self):
         self.build_consumer()
+
 
 def test():
     a = KafkaUlConsumer()
