@@ -3,6 +3,7 @@ import json
 import threading
 import requests
 import logging
+import time
 import jieba.analyse
 import math
 from bloom_filter import Bf
@@ -54,12 +55,15 @@ class KafkaUlConsumer():
         new_dict = {}
         for k, v in tmp_dict.items():
             k = k.replace('.', '```')
+            k = k.replace('$', '%^&')
             new_dict[k] = 1.0 * v / tmp_sum
         return new_dict
 
     def time_decay(self, tags, tags_new, top_category, category, city, ts, ts_now):
 
         two_day_s = 172800
+        if ts_now < ts:
+            ts_now = ts
         times = math.pow(0.5, (ts_now - ts) / two_day_s)
         try:
             tags.setdefault(top_category, {})
@@ -73,6 +77,7 @@ class KafkaUlConsumer():
                         if k1 == top_category and k2 == category:
                             for k3_new, v3_new in tags_new.items():
                                 k3_new = k3_new.replace('.', '```')
+                                k3_new = k3_new.replace('$', '%^&')
                                 tags[k1][k2]['content'].setdefault(k3_new, 0)
                                 tags[k1][k2]['content'][k3_new] += v3_new
                             tags[k1][k2]['content'] = dict(sorted(tags[k1][k2]['content'].items(), key=lambda d: d[1], reverse=True)[:50])
@@ -102,13 +107,12 @@ class KafkaUlConsumer():
             top_category = result['top_category']
             category = result['category']
             #city = result['city']
-            print('read from db')
+            #print('read from db')
             city = ''
 
-        except StopIteration:
-            # function
+        except (StopIteration, KeyError):
             get_ad_info_url = self.mysql_api.format(ad_id)
-            print('read from ad url')
+            #print('read from ad url')
             try:
                 request_info = json.loads(requests.get(get_ad_info_url).text)
             except Exception as e:
@@ -117,8 +121,9 @@ class KafkaUlConsumer():
             title, ad_content = request_info['title'], request_info['content']
             city, top_category, category = request_info['city'], request_info['top_category'].encode('utf-8'), request_info['category'].encode('utf-8')
             tags_new = self.cut_ad_content(title, ad_content)
-            mongo_driver.insert('ad_content', [{'_id': ad_id, 'city': city, 'top_category': top_category,
-                                                'category': category, 'update_time': ts_now, 'tags': tags_new}])
+           # mongo_driver.insert('ad_content', [{'_id': ad_id, 'city': city, 'top_category': top_category,
+           #                                     'category': category, 'update_time': ts_now, 'tags': tags_new}])
+            mongo_driver.update('ad_content', '_id', {'_id': ad_id, 'city': city, 'top_category': top_category, 'category': category, 'update_time': ts_now, 'tags': tags_new})
 
         # 3.写redis 改名字
         bf = Bf()
@@ -148,15 +153,18 @@ class KafkaUlConsumer():
                                 # consumer_timeout_ms=self.timeout
                                 )
         for index, message in enumerate(consumer):
-            if index % 33333 == 0:
-                print index
             try:
                 tmp_json = json.loads(message.value)
             except Exception as e:
                 logging.error(e)
                 continue
             if tmp_json['type'] == 'app_vad_traffic':
+                if index % 1000 == 0:
+                    print "index:{0}, time:{1}, unix_time:{2}, unix_time_now:{3}".format(index, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tmp_json['msg']['interview_time'])), tmp_json['msg']['interview_time'], time.time())
                 self.count_online_tags(tmp_json['msg'])
+                if index % 1000 == 0:
+                    print "unix_time_now:{}".format(time.time())
+                
 
     def build_consumer(self):
         for num in range(self.consume_num):

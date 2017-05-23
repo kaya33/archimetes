@@ -72,13 +72,17 @@ def test():
 
 
 def build():
+    print 'building...'
     a = Bf()
     a.build_from_redis()
+    print 'finish'
 
 
 def delete():
+    print 'deleting'
     a = Bf()
     a.delete_user_list()
+    print 'finish'
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'del':
