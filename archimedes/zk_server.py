@@ -259,7 +259,7 @@ if __name__ == '__main__':
     # setting config
     #conf = config.Config("./etc/demo_server.conf")
     conf = config.Config() # 创建配置文件类
-    conf.set("server", "service", "python_test$EchoService"); #设置服务名，此服务名会在zk上注册
+    conf.set("server", "service", "rec$RecService"); #设置服务名，此服务名会在zk上注册
     conf.set("server", "port", "9095") #设置server 的端口
     conf.set("server", "zk_connect_str", "127.0.0.1:2181") #设置zk的连接地址
     conf.set("server", "auth_user", "test") # 设置zk 的授权用户名

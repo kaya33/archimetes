@@ -26,7 +26,6 @@ struct UserRequest {
 
 struct MultRequest {
     1: required string user_id;
-    2: required string ad_id;
     3: optional string city_name;
     4: optional string first_cat;
     5: optional string second_cat;

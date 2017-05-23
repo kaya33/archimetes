@@ -106,6 +106,7 @@ class KafkaUlConsumer():
             city = ''
 
         except StopIteration:
+            # function
             get_ad_info_url = self.mysql_api.format(ad_id)
             print('read from ad url')
             try:
@@ -119,7 +120,7 @@ class KafkaUlConsumer():
             mongo_driver.insert('ad_content', [{'_id': ad_id, 'city': city, 'top_category': top_category,
                                                 'category': category, 'update_time': ts_now, 'tags': tags_new}])
 
-        # 3.写redis
+        # 3.写redis 改名字
         bf = Bf()
         bf.save(user_id, ad_id, method='view')
 

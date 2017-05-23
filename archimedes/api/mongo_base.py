@@ -31,8 +31,9 @@ class Mongo():
 
         dev_read_uri = conf['dev_read_uri']
         dev_write_uri = conf['dev_write_uri']
-        pro_read_uri = conf['pro_read_uri']
-        pro_write_uri = conf['pro_write_uri']
+        prod_read_uri = conf['pro_read_uri']
+        prod_write_uri = conf['pro_write_uri']
+# 111
 
         if is_pro:
             self.read_uri = pro_read_uri
@@ -43,6 +44,7 @@ class Mongo():
             self.write_uri = dev_write_uri
 
     def connect(self):
+        #   222
         if self.read_db is None or self.write_db is None:
             self.read_db = MongoClient(self.read_uri)[self.db_name]
             self.write_db = MongoClient(self.write_uri)[self.db_name]
@@ -50,27 +52,29 @@ class Mongo():
     def reconnect(self):
         # release
         try:
-            self.close_connect()
+        # 333
+            if self.read_db is None or self.write_db is None:
+                self.close_connect()
         except:
             pass
         self.read_db = MongoClient(self.read_uri)[self.db_name]
         self.write_db = MongoClient(self.write_uri)[self.db_name]
 
     def close_connect(self):
-
+# 444
         self.read_db.close()
         self.write_db.close()
 
     def read(self, collect_name, search_json={}):
-
+# 555
         query_data = self.read_db[collect_name]
         return query_data.find(search_json)
 
     def insert(self, collect_name, data):
 
         if len(data) == 0:
-            return []
-
+            return 'error'
+#666
         query_obj = self.write_db[collect_name]
         try:
             result = query_obj.insert_many(data)
@@ -80,18 +84,18 @@ class Mongo():
             return 'error'
 
     def delete(self, collect_name, search_json={}):
-
+# 777
         result = self.write_db[collect_name].remove(search_json)
         return 'success'
 
     def expire(self, collect_name, sec):
-
+#888
         query_obj = self.write_db[collect_name]
         query_obj.create_index('update_time', expireAfterSeconds=sec)
         return 'success'
 
     def update(self, collect_name, key, data):
-
+#999
         if type(data) == dict:
             data = [data]
         coll = self.write_db[collect_name]
