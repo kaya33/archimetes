@@ -37,7 +37,7 @@ class Bf():
         return [x for x in ad_id_list if x[0] not in in_ele]
 
     def save(self, user_id, ad_id_list, method='rec'):
-
+#insert rebuild
         if type(ad_id_list) != list:
             ad_id_list = [ad_id_list]
         p = pyreBloom.pyreBloom(user_id, self.capacity, self.error_rate)
@@ -52,6 +52,7 @@ class Bf():
             p = pyreBloom.pyreBloom(user_id, self.capacity, self.error_rate)
             p.delete()
             p.extend(self.redis_obj.select(user_id))
+            # num
 
     def delete_user_list(self):
 

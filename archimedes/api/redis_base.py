@@ -29,6 +29,7 @@ class Redis():
         self.pool = redis.ConnectionPool(host=self.host, port=self.port)
 
     def connect(self):
+        # 1
         r = redis.StrictRedis(connection_pool=self.pool)
         return r
 

@@ -125,7 +125,7 @@ class KafkaUlConsumer():
            #                                     'category': category, 'update_time': ts_now, 'tags': tags_new}])
             mongo_driver.update('ad_content', '_id', {'_id': ad_id, 'city': city, 'top_category': top_category, 'category': category, 'update_time': ts_now, 'tags': tags_new})
 
-        # 3.写redis
+        # 3.写redis 改名字
         bf = Bf()
         bf.save(user_id, ad_id, method='view')
 
