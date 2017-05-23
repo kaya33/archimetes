@@ -2,7 +2,7 @@ import logging
 from mongo_base import Mongo
 
 
-class UP(Mongo):
+class UserProfile(Mongo):
 
     def read_tag(self, collect_name, search_json={}, top_category='', category='', top=5):
         result = self.read(collect_name, search_json)
@@ -31,11 +31,12 @@ class UP(Mongo):
 
         return result_dict
 
+
 def test():
-    a = UP('chaoge')
+    a = UserProfile('chaoge')
     a.connect()
     user_id = '748418c365704429a4e8645dddb6e995'
     # print a.read_tag('RecommendationUserTagsOffline', {})
-    print a.read_tag('RecommendationUserTagsOffline', {'user_id':user_id})
+    # print a.read_tag('RecommendationUserTagsOffline', {'user_id':user_id})
 
 # test()

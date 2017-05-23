@@ -1,9 +1,11 @@
 import redis
 import json
-
+import logging
 
 # maxmemory 4096mb
 # maxmemory-policy allkeys-lru
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s-%(name)s-%(levelname)s-%(message)s")
+
 
 class Singleton(type):
 
@@ -25,13 +27,24 @@ class Redis():
 
         self.host = conf['host']
         self.port = conf['port']
-
-        self.pool = redis.ConnectionPool(host=self.host, port=self.port)
+        try:
+            self.pool = redis.ConnectionPool(host=self.host, port=self.port)
+        except Exception as e:
+            logging.error('redis pool init err:{}'.format(e))
 
     def connect(self):
-        # 1
-        r = redis.StrictRedis(connection_pool=self.pool)
-        return r
+
+        if self.pool:
+            r = redis.StrictRedis(connection_pool=self.pool)
+            return r
+        else:
+            try:
+                self.pool = redis.ConnectionPool(host=self.host, port=self.port)
+                r = redis.StrictRedis(connection_pool=self.pool)
+                return r
+            except Exception as e:
+                logging.error('redis pool init err:{}'.format(e))
+                return None
 
 
 def test():
