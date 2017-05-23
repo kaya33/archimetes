@@ -3,21 +3,21 @@
 # This script is meant to start your metadata server
 
 # Check the parameters provided
-if [ "$#" -ne 1 ]
-then
-	echo "Wrong arguments, usage :"
-	echo "./runBlockServer.sh <config_file>"
-	exit
-fi
-
-
-CONFIGFILE_PATH=$1
+#if [ "$#" -ne 1 ]
+#then
+#	echo "Wrong arguments, usage :"
+#	echo "./runBlockServer.sh <config_file>"
+#	exit
+#fi
+#
+#
+#CONFIGFILE_PATH=$1
 
 # Now call your metadata server with the above arguments
 # Eg. If you are using python and your blockServer is BlockServer.py
 # Call
 #
-python3 src/server.py $CONFIGFILE_PATH
+python archimedes/rec_server.py
 #
 # or if CPP
 #
