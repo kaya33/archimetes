@@ -3,7 +3,7 @@
 
 __author__ = 'xujiang@baixing.com'
 
-
+import random
 import os
 import sys
 import multiprocessing
@@ -24,11 +24,11 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
-from api.user_tag import UP
-from api.bloom_filter import Bf
+from api.user_tag import UserProfile
+from api.bloom_filter import BloomFilter
 from core.combine_sort import sample_sort,sample_sort1
 from api.redis_ul import RedisUl
-
+from conf.config_default import configs
 from utils.parse_json import get_all_keywd
 from data.base_data_source import fetchKwData
 
@@ -59,16 +59,16 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
 
     # get tags size from config
     kw_size = int(configs.get('user_profile').get('kw_size',4))
-
+    print kw_size
     try:
-        on_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
-    except Exception as e:
-        on_tag_data = {}
-
-    try:
-        off_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
+        off_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     except Exception as e:
         off_tag_data = {}
+
+    try:
+        on_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
+    except Exception as e:
+        on_tag_data = {}
 
     print off_tag_data
 
@@ -76,33 +76,38 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     online_tags = []
     total_tag = []
     try:
-        contact_tags = off_tag_data[first_category][second_category]['contact_mata'][:kw_size]
+        contact_tags = off_tag_data[first_category][second_category]['contact_mata'][:(kw_size*10)]
     except KeyError:
         pass
     try:
-        online_tags = on_tag_data[first_category][second_category]['content'][:kw_size]
+        online_tags = on_tag_data[first_category][second_category]['content'][:(kw_size*10)]
     except KeyError:
         pass
-    if len(contact_tags) >= kw_size*0.5 and len(online_tags)>=kw_size*0.5:
-        total_tag = contact_tags[:kw_size*0.5] + online_tags[:kw_size*0.5]
-    elif len(contact_tags) < kw_size*0.5:
-        contact_tags_size = contact_tags[:kw_size*0.5]
-        total_tag = contact_tags[:contact_tags_size] + online_tags[:(kw_size - contact_tags_size)]
+    print len(contact_tags), kw_size*10
+    if len(contact_tags) >= kw_size*10 and len(online_tags)>=kw_size*10:
+        total_tag = contact_tags[:(kw_size*10)] + online_tags[:(kw_size*10)]
+    elif len(contact_tags) < kw_size*10:
+        contact_tags_size = len(contact_tags)
+        total_tag = contact_tags[:contact_tags_size] + online_tags[:(kw_size*10 - contact_tags_size)]
     else:
-        contact_tags_size = online_tags[:kw_size*0.5]
-        total_tag = online_tags[:contact_tags_size] + contact_tags[:(kw_size - contact_tags_size)]
-    if len(total_tag) < 4:
+        contact_tags_size = online_tags[:(kw_size*10)]
+        total_tag = online_tags[:contact_tags_size] + contact_tags[:(kw_size*20 - contact_tags_size)]
+    if len(total_tag) < kw_size*20:
         try:
-            total_tag_size = len(total_tag)
-            total_tag += off_tag_data[first_category][second_category]['content'][:(kw_size - total_tag_size)]
+            print first_category, second_category
+            print off_tag_data
+            total_tag_size = len(total_tag[:(kw_size*10)])
+            total_tag += off_tag_data[first_category][second_category]['mata'][:(kw_size*20 - total_tag_size)]
+            total_tag += off_tag_data[first_category][second_category]['content'][:(kw_size*20 - len(total_tag))]
         except KeyError:
-            pass
+            print '获取用户标签数据为空'
 
     # if tag is None the return
     if len(total_tag) == 0:
         log.warning("获取关键词为空！")
         return result_list
-
+    
+    print total_tag
     # 根据用户标签来获取帖子
     try:
         tmp_list = []
@@ -111,12 +116,14 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
             k = k.encode('utf-8')
             v = float(v)
             tmp_list.append((k, v))
+        tmp_list_sample = random.sample(tmp_list, kw_size)
         second_cat = second_category.encode('utf-8')
         begin = datetime.datetime.now()
-        kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 60}
+        kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weights":[x[1] for x in tmp_list_sample],"days": 60, 'cut':1000}
+        print kwdata
         user_profile_ad = fetchKwData(kwdata)
         if len(user_profile_ad)<size:
-            kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 270}
+            kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weights":[x[1] for x in tmp_list_sample],"days": 270, 'cut':1000}
             user_profile_ad.extend(fetchKwData(kwdata))
             #
 
@@ -129,10 +136,11 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     for info_tuple in user_profile_ad:
         k, v = info_tuple['ad_id'], info_tuple['score']
         result_list.append(({"rec_id":k, "sim":v, "rec_name":"user_profile"}))
+    print result_list
     return result_list
 
 mongo = Mongo('chaoge', 0)
-up = UP('chaoge', 0)
+up = UserProfile('chaoge', 0)
 mongo.connect()
 up.connect()
 
