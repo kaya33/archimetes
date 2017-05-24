@@ -24,8 +24,8 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol,TJSONProtocol,TCompactProtocol
 from thrift.server import TServer
 from api.mongo_base import Mongo
-from api.user_tag import UP
-from api.bloom_filter import Bf
+from api.user_tag import UserProfile
+from api.bloom_filter import BloomFilter
 from core.combine_sort import sample_sort,sample_sort1
 from api.redis_ul import RedisUl
 
@@ -61,16 +61,16 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     kw_size = int(configs.get('user_profile').get('kw_size',4))
 
     try:
-        on_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
-    except Exception as e:
-        on_tag_data = {}
-
-    try:
-        off_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
+        off_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     except Exception as e:
         off_tag_data = {}
 
-    print off_tag_data
+    try:
+        on_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
+    except Exception as e:
+        on_tag_data = {}
+
+    print on_tag_data
 
     contact_tags = []
     online_tags = []
@@ -111,6 +111,7 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
             k = k.encode('utf-8')
             v = float(v)
             tmp_list.append((k, v))
+
         second_cat = second_category.encode('utf-8')
         begin = datetime.datetime.now()
         kwdata = {"num": size,"city": city,"category": second_cat,"tag": "_".join([x[0] for x in tmp_list]),"weights":[x[1] for x in tmp_list],"days": 60}
@@ -132,7 +133,7 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     return result_list
 
 mongo = Mongo('chaoge', 0)
-up = UP('chaoge', 0)
+up = UserProfile('chaoge', 0)
 mongo.connect()
 up.connect()
 
@@ -288,11 +289,6 @@ class RecommenderServerHandler(object):
         return res
 
 def main():
-    if 1:
-        from conf.config_default import configs
-    else:
-        from conf.config_default import configs
-
     log.info("Initializing recamendation server")
     handler = RecommenderServerHandler()
     port = int(configs.get('server').get('port',9090))
