@@ -3,10 +3,6 @@ import pprint
 
 client = MongoClient('192.168.1.40', 27017)
 
-
-
-
-
 def fetchRecData():
     db = client['chaoge']
     coll = db['RecommenderationAd']

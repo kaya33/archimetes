@@ -62,18 +62,20 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     try:
         off_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     except Exception as e:
+        log.error('获取离线用户标签失败,{}'.format(e))
         off_tag_data = {}
 
     try:
         on_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
     except Exception as e:
+        log.error('获取在线用户标签失败，{}'.format(e))
         on_tag_data = {}
 
     contact_tags = []
     online_tags = []
     total_tag = []
     try:
-        contact_tags = off_tag_data[first_category][second_category]['contact_mata'][:(kw_size*10)]
+        contact_tags = off_tag_data[first_category][second_category]['contact_meta'][:(kw_size*10)]
     except KeyError:
         pass
     try:
@@ -93,9 +95,9 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     if len(total_tag) < kw_size*20:
         try:
             total_tag_size = len(total_tag[:(kw_size*10)])
-            total_tag += off_tag_data[first_category][second_category]['mata'][:(kw_size*20 - total_tag_size)]
+            total_tag += off_tag_data[first_category][second_category]['meta'][:(kw_size*20 - total_tag_size)]
         except KeyError as e:
-            log.error('离线用户标签mata数据为空,{}'.format(e))
+            log.error('离线用户标签meta数据为空,{}'.format(e))
 
         try:
             total_tag += off_tag_data[first_category][second_category]['content'][:(kw_size*20 - len(total_tag))]
@@ -137,6 +139,9 @@ mongo = Mongo('chaoge', 0)
 up = UserProfile('chaoge', 0)
 mongo.connect()
 up.connect()
+
+user_viewed = RedisUl()
+
 
 class RecommenderServerHandler(object):
     def __init__(self):
@@ -207,23 +212,28 @@ class RecommenderServerHandler(object):
             print 'fetch batch user rec'
             data = fetch_batch_userrec(user_id=user_id,first_category=first_category,second_category=second_category,city=city,size=100)
         except Exception as e:
+            log.error('获取用户画像数据失败，{}'.format(e))
             res.status = responseType.ERROR
             res.err_str = "获取用户画像数据失败"
             return res
 
+        # 根据用户的访问记录查询离线协同过滤
+        ad_list = user_viewed.select(user_id,num=10, method='view')
+        print ad_list
+        for ad_id in ad_list:
+            data.extend(fetch_batch_itemrec(ad_id))
 
         # TODO 调用离线推荐列表数据
 
         print 'data ',data
         if len(data) == 0:
-            log.error("用户画像数据为空")
+            log.error("推荐结果为空")
             res.status = responseType.ERROR
-            res.err_str = "用户画像数据为空"
+            res.err_str = "推荐结果数据为空"
             return res
 
         combine_data = sample_sort(data)[:size]
 
-        print 'combine data', combine_data
         # TODO bloom 过滤
         try:
             bf = BloomFilter()
@@ -240,7 +250,6 @@ class RecommenderServerHandler(object):
         """ Integration of multiple strategies
         :param req: 
         :return: 
-        
         """
         res = RecResponse()
         res.status = responseType.OK
