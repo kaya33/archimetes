@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 import bson
 import sys
@@ -20,6 +21,7 @@ with open(file_name, 'r')as f:
     mongo_driver = Mongo('chaoge', 0)
     mongo_driver.connect()
     tmp_dict = {}
+    tmp_list = []
     for index, row in enumerate(f):
         if len(row) < 3:
             continue
@@ -36,9 +38,15 @@ with open(file_name, 'r')as f:
         if index % 20000 == 0:
             print('line:{0}, time:{1}'.format(index, time.time()))
 
-        try:
-            mongo_driver.update(collect_name, key, dict(tmp_dict))
-
-        except (pymongo.errors.WriteError, bson.errors.InvalidDocument, pymongo.errors.BulkWriteError):
-            continue
-
+        tmp_list.append(dict(tmp_dict))
+        if len(tmp_list) >= 100:
+            try:
+                mongo_driver.update(collect_name, key, tmp_list)
+                tmp_list = []
+            except (pymongo.errors.WriteError, bson.errors.InvalidDocument, pymongo.errors.BulkWriteError) as e:
+                logging.error(e)
+                continue
+    try:
+        mongo_driver.update(collect_name, key, tmp_list)
+    except (pymongo.errors.WriteError, bson.errors.InvalidDocument, pymongo.errors.BulkWriteError) as e:
+        logging.error(e)

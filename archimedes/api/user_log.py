@@ -22,6 +22,9 @@ class UserLog(redis_base.Redis):
         ts = time.time()
         tmp_list = []
         r = self.connect()
+        if r is None:
+            logging.error('[user_log]insert err, redis connect error')
+            return []
 
         if type(ad_id) != list:
             ad_id = [ad_id]
@@ -42,7 +45,7 @@ class UserLog(redis_base.Redis):
 
         r = self.connect()
         if r is None:
-            logging.error('redis connect error')
+            logging.error('[user_log]select err, redis connect error')
             return []
 
         if num is not None:
