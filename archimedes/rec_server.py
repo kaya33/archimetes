@@ -58,7 +58,7 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
 
     # get tags size from config
     kw_size = int(configs.get('user_profile').get('kw_size',4))
-    print kw_size
+    log.info('{} key word will be user to fetch vad data.'.format(kw_size))
     try:
         off_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id}, top=size)
     except Exception as e:
@@ -68,8 +68,6 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
         on_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id}, top=size)
     except Exception as e:
         on_tag_data = {}
-
-    print on_tag_data
 
     contact_tags = []
     online_tags = []
@@ -83,6 +81,7 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     except KeyError:
         pass
     print len(contact_tags), kw_size*10
+    print '----- off_tag_data ----- \n',off_tag_data
     if len(contact_tags) >= kw_size*10 and len(online_tags)>=kw_size*10:
         total_tag = contact_tags[:(kw_size*10)] + online_tags[:(kw_size*10)]
     elif len(contact_tags) < kw_size*10:
