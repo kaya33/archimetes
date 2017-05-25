@@ -93,20 +93,20 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
         total_tag = online_tags[:contact_tags_size] + contact_tags[:(kw_size*20 - contact_tags_size)]
     if len(total_tag) < kw_size*20:
         try:
-            print first_category, second_category
-            print off_tag_data
             total_tag_size = len(total_tag[:(kw_size*10)])
             total_tag += off_tag_data[first_category][second_category]['mata'][:(kw_size*20 - total_tag_size)]
+        except KeyError as e:
+            log.error('离线用户标签mata数据为空,{}'.format(e))
+
+        try:
             total_tag += off_tag_data[first_category][second_category]['content'][:(kw_size*20 - len(total_tag))]
-        except KeyError:
-            print '获取用户标签数据为空'
+        except KeyError as e:
+            log.error('离线用户标签content数据为空，{}'.format(e))
 
     # if tag is None the return
     if len(total_tag) == 0:
         log.warning("获取关键词为空！")
         return result_list
-    
-    print total_tag
     # 根据用户标签来获取帖子
     try:
         tmp_list = []
@@ -120,7 +120,6 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
         second_category = second_category.encode('utf-8')
         begin = datetime.datetime.now()
         kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weight":[x[1] for x in tmp_list_sample],"days": 60, 'cut':1000}
-        print kwdata
         user_profile_ad = fetchKwData(kwdata)
         if len(user_profile_ad)<size:
             kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weight":[x[1] for x in tmp_list_sample],"days": 270, 'cut':1000}
@@ -133,7 +132,6 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     for info_tuple in user_profile_ad:
         k, v = info_tuple['ad_id'], info_tuple['score']
         result_list.append(({"rec_id":k, "sim":v, "rec_name":"user_profile"}))
-    print result_list
     return result_list
 
 mongo = Mongo('chaoge', 0)
@@ -156,7 +154,6 @@ class RecommenderServerHandler(object):
         res.status = responseType.OK
         res.err_str = ""
         res.data = []
-
         if req.ad_id is None:
             res.status = responseType.ERROR;
             res.err_str = "ad_id不能为空"
@@ -229,10 +226,12 @@ class RecommenderServerHandler(object):
 
         print 'combine data', combine_data
         # TODO bloom 过滤
-        bf = BloomFilter()
-        combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        bf.save(user_id, [str(x['rec_id']) for x in combine_data], 'rec')
-
+        try:
+            bf = BloomFilter()
+            combine_data = bf.filter_ad_by_user(user_id, combine_data)
+            bf.save(user_id, [str(x['rec_id']) for x in combine_data], 'rec')
+        except Exception as e:
+            log.error("bloom 过滤器 发生错误")
 
         for obj in combine_data:
             res.data.append(OneRecResult(str(obj['rec_id']),obj['rec_name']))
