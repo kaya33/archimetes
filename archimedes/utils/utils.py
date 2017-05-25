@@ -2,6 +2,8 @@
 
 import sys
 import traceback
+import time
+from functools import wraps
 
 
 def import_class(import_str):
@@ -21,3 +23,15 @@ def get_module(import_str):
     if not module_name:
         raise("import_str:%s not regular", import_str)
     return module_name
+
+def fn_timer(function):
+    @wraps(function)
+    def function_timer(*args, **kwargs):
+        t0 = time.time()
+        result = function(*args, **kwargs)
+        t1 = time.time()
+        print ("Total time running %s: %s seconds" %
+               (function.func_name, str(t1-t0))
+               )
+        return result
+    return function_timer

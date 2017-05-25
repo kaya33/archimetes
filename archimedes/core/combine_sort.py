@@ -5,6 +5,7 @@ __author__ = 'xujiang@baixing.com'
 
 from collections import Counter
 
+
 def sample_sort(x):
     """
     :param x: [{},{}]
