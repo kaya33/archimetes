@@ -26,10 +26,9 @@ from thrift.server import TServer
 from api.mongo_base import Mongo
 from api.user_tag import UserProfile
 from api.bloom_filter import BloomFilter
-from core.combine_sort import sample_sort,sample_sort1
+from core.combine_sort import sample_sort
 from api.redis_ul import RedisUl
 from conf.config_default import configs
-from utils.parse_json import get_all_keywd
 from data.base_data_source import fetchKwData
 
 log = logger.getLogger(__name__)
@@ -70,7 +69,7 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     except Exception as e:
         on_tag_data = {}
 
-    print off_tag_data
+    print on_tag_data
 
     contact_tags = []
     online_tags = []
@@ -116,8 +115,9 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
             k = k.encode('utf-8')
             v = float(v)
             tmp_list.append((k, v))
+
         tmp_list_sample = random.sample(tmp_list, kw_size)
-        second_cat = second_category.encode('utf-8')
+        second_category = second_category.encode('utf-8')
         begin = datetime.datetime.now()
         kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weight":[x[1] for x in tmp_list_sample],"days": 60, 'cut':1000}
         print kwdata
@@ -125,8 +125,6 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
         if len(user_profile_ad)<size:
             kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weight":[x[1] for x in tmp_list_sample],"days": 270, 'cut':1000}
             user_profile_ad.extend(fetchKwData(kwdata))
-            #
-
         end = datetime.datetime.now()
         print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
@@ -229,9 +227,9 @@ class RecommenderServerHandler(object):
             return res
 
         combine_data = sample_sort(data)
-
+        print 'combine data', combine_data
         # TODO bloom 过滤
-        bf = Bf()
+        bf = BloomFilter()
         combine_data = bf.filter_ad_by_user(user_id, combine_data)
         bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
 
@@ -296,11 +294,6 @@ class RecommenderServerHandler(object):
         return res
 
 def main():
-    if 1:
-        from conf.config_default import configs
-    else:
-        from conf.config_default import configs
-
     log.info("Initializing recamendation server")
     handler = RecommenderServerHandler()
     port = int(configs.get('server').get('port',9090))
@@ -308,7 +301,7 @@ def main():
     processor = Recommender.Processor(handler)
     transport = TSocket.TServerSocket(port=port)
     tfactory = TTransport.TBufferedTransportFactory()
-    pfactory = TCompactProtocol.TCompactProtocolFactory()
+    pfactory = TBinaryProtocol.TBinaryProtocolFactory()
     server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
     log.info("Starting server on port : {}".format(str(port)))
     try:
