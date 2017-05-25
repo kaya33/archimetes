@@ -25,8 +25,7 @@ class UserProfile(Mongo):
                         result_dict[k1][k2].setdefault(k3, {})
 
                         for k4, v4 in v3.items():
-                            k4 = k4.replace('```', '.')
-                            k4 = k4.replace('%^&', '$')
+                            v3[k4.replace('```', '.').replace('%^&', '$')] = v3.pop(k4)
                         result_dict[k1][k2][k3] = sorted(v3.items(), key=lambda d: d[1], reverse=True)[:top]
 
         except KeyError as e:

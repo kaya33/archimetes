@@ -11,6 +11,7 @@ from bloom_filter import BloomFilter
 from mongo_base import Mongo
 from kafka import KafkaConsumer
 from conf.config_default import configs
+from conf.user_tag_black_list import get_black_list
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s-%(name)s-%(levelname)s-%(message)s")
 
@@ -40,6 +41,7 @@ class KafkaUlConsumer():
         self.topic = configs.get('kafka_online_tag', {}).get("topic", 'eventlog')
         self.consume_num = configs.get('kafka_online_tag', {}).get("consume_num", 1)
         self.mysql_api = configs.get('kafka_online_tag', {}).get("mysql_api")
+        self.black_list_set = get_black_list()
 
     def cut_ad_content(self, title, content):
 
@@ -54,7 +56,7 @@ class KafkaUlConsumer():
         para = len(content_set) / 0.01
         for all_set in content_set:
             tmp_weight = all_set[1] * para
-            if tmp_weight > 600:
+            if tmp_weight > 600 and all_set[0] not in self.black_list_set:
                 to_one_dict[all_set[0]] = int(tmp_weight)
         # 前8
         tmp_dict = dict(sorted(to_one_dict.items(),
