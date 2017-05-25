@@ -227,16 +227,15 @@ class RecommenderServerHandler(object):
 
         combine_data = sample_sort(data)[:size]
 
-        try:
-            # TODO bloom 过滤
-            bf = BloomFilter()
-            combine_data = bf.filter_ad_by_user(user_id, combine_data)
-            bf.save(user_id, [x[0] for x in combine_data], 'rec')
-        except Exception as e:
-            print
+        print 'combine data', combine_data
+        # TODO bloom 过滤
+        bf = BloomFilter()
+        combine_data = bf.filter_ad_by_user(user_id, combine_data)
+        bf.save(user_id, [str(x['rec_id']) for x in combine_data], 'rec')
 
-        for obj in combine_data[:size]:
-            res.data.append(OneRecResult(str(obj['rec_id']),'user_profile'))
+
+        for obj in combine_data:
+            res.data.append(OneRecResult(str(obj['rec_id']),obj['rec_name']))
         return res
 
     def fetchRecByMult(self,req):
