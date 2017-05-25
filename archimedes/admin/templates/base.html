@@ -326,6 +326,13 @@
 								detail
 							</a>
 						</li>
+
+						<li>
+							<a href="{% url 'manage.views.user_profile' %}" {% if 'user_profile' in request.path %}style="color: #33FFCC;"{% endif %}>
+								<i class="ace-icon fa fa-th-large"></i>
+								userprofile
+							</a>
+						</li>
 					</ul>
 
 					<!-- /section:basics/navbar.nav -->

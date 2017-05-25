@@ -16,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import sys
 import json
 import logging
 from django.conf import settings
@@ -30,6 +30,12 @@ import re
 from manage.customdecorators import auto_flush_cache
 from manage.lib.harpcutils import safe_list_get
 from manage.lib.zk_harpc import ZK_HARPC
+
+sys.path.append('.../archimedes')
+
+from api.user_tag import UserProfile
+up = UserProfile('chaoge', 0)
+up.connect()
 
 logger = logging.getLogger('manage.views')
 
@@ -422,6 +428,25 @@ def flush_cache(request):
             return JsonResponse({'rc': 0, 'msg': '缓存更新成功，请刷新页面！'}, safe=False)
         else:
             return JsonResponse({'rc': 1, 'msg': result[1]}, safe=False)
+
+@login_required(login_url='/manage')
+def user_profile(request):
+    if request.method == "GET":
+        data = request.GET
+        user_id = data.get("user_id",None)
+        print 'user_id',user_id
+        isExists = False
+        if user_id and len(user_id) > 0:
+            off_tag_data = up.read_tag('RecommendationUserTagsOffline', {'_id':user_id})
+            try:
+                on_tag_data = up.read_tag('RecommendationUserTagsOnline', {'_id': user_id})
+            except Exception as e:
+                on_tag_data = {}
+            if len(off_tag_data)>0 or len(on_tag_data)>0:
+                isExists = True
+        return render_to_response("userprofile.html", locals(), RequestContext(request))
+
+
 
 
 

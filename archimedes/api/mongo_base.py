@@ -109,7 +109,7 @@ class Mongo():
         coll = self.write_db[collect_name]
         for d in data:
             #print d
-            requests.append(ReplaceOne({key: d[key]}, {'$set': d}, upsert=True))
+            requests.append(ReplaceOne({key: d[key]}, d, upsert=True))
 
         try:
             res = coll.bulk_write(requests, ordered=False)

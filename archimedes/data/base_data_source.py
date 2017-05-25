@@ -25,15 +25,18 @@ def fetchKwData(data,headers=None):
             'postman-token': "82f99b3a-2fcb-527e-2f13-1b2e5c3303bc"
         }
     body = json.dumps(data, ensure_ascii=False)
-    URL = "http://www.baixing.com/recapi/getAdByKw?ENABLE_PROFILING=1"
+    print body
+    # URL = "http://www.baixing.com/recapi/getAdByKw?ENABLE_PROFILING=1"
+    URL = "http://www.baixing.com/recapi/getAdByKw"
     print URL
     kwdata = WebDataSource("post", URL).fetch_data(body,headers)
-    print kwdata
+    print kwdata.json()
     return kwdata.json()
 
 
 
 if __name__ == "__main__":
 
-    data = {"num": 3,"city": "shanghai","category": "wupinhuishou","tag": "二手_相机","days": 400}
+    data = {"category": "zhengzu", "city": "shanghai", "cut": 1000, "weight": [0.0299, 0.0838, 0.0359, 0.0598], "tag": "11000元_750元_100平米_60平米", "days": 270, "num": 100}
     response = fetchKwData(data)
+    print response

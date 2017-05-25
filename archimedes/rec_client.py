@@ -57,7 +57,7 @@ def getRecServerSocket(port):
     # Buffering is critical. Raw sockets are very slow
     transport = TTransport.TBufferedTransport(transport)
     # Wrap in a protocol
-    protocol = TCompactProtocol.TCompactProtocol(transport)
+    protocol = TBinaryProtocol.TBinaryProtocol(transport)
     # Create a client to use the protocol encoder
     client = Recommender.Client(protocol)
 
@@ -291,8 +291,8 @@ if __name__ == "__main__":
         req = UserRequest()
         req.user_id = id
         req.city_name = 'shanghai'
-        req.first_cat = 'fang'
-        req.second_cat = 'zhengzu'
+        req.first_category = 'fang'
+        req.second_category = 'zhengzu'
         req.size = size
         servPort = getRecServerPort()
         sock = getRecServerSocket(servPort)

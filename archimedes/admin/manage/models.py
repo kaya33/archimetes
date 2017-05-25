@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 from django.db import models
+from mongoengine import *
 
 class Task(models.Model):
     class Meta:
@@ -22,3 +23,7 @@ class Task(models.Model):
             ('admin_task', 'Can admin tasks'),
             ('guest_task', 'Can guest tasks'),
         )
+
+class UserTag(Document):
+    user_id = StringField(max_length=100,required=True)
+    user_tag = DictField()
