@@ -119,11 +119,11 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
         tmp_list_sample = random.sample(tmp_list, kw_size)
         second_cat = second_category.encode('utf-8')
         begin = datetime.datetime.now()
-        kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weights":[x[1] for x in tmp_list_sample],"days": 60, 'cut':1000}
+        kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weight":[x[1] for x in tmp_list_sample],"days": 60, 'cut':1000}
         print kwdata
         user_profile_ad = fetchKwData(kwdata)
         if len(user_profile_ad)<size:
-            kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weights":[x[1] for x in tmp_list_sample],"days": 270, 'cut':1000}
+            kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weight":[x[1] for x in tmp_list_sample],"days": 270, 'cut':1000}
             user_profile_ad.extend(fetchKwData(kwdata))
             #
 
