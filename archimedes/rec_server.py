@@ -53,7 +53,7 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
     :param size: post size to return
     :return: [{'rec_id':rec_id,'sim':sim,'rec_name':rec_name},{} ...]
     """
-
+    log.info('{},{},{},{},{}'.format(user_id,first_category,second_category,city,size))
     result_list = []
 
     # get tags size from config
