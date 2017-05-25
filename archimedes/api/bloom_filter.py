@@ -34,12 +34,14 @@ class BloomFilter():
         self.redis_obj = UserLog()
         self.redis_base_obj = Redis()
 
-
-    def filter_ad_by_user(self, user_id, ad_id_list):
-
-        p = pyreBloom.pyreBloom(user_id, self.capacity, self.error_rate)
-        in_ele = set(p.contains([x[0] for x in ad_id_list]))
-        return [x for x in ad_id_list if x[0] not in in_ele]
+    def filter_ad_by_user(self, user_id, ad_id_list, filter_key='rec_id'):
+        try:
+            p = pyreBloom.pyreBloom(user_id, self.capacity, self.error_rate)
+            in_ele = set(p.contains([str(x[filter_key]) for x in ad_id_list]))
+            return [x for x in ad_id_list if str(x[filter_key]) not in in_ele]
+        except Exception as e:
+            logging.error('[bloom filter]filter err, user_id:{0}, ad_id:{1}, err:{2}'.format(user_id, ad_id_list, e))
+            return ad_id_list
 
     def save(self, user_id, ad_id_list, method='rec'):
 
