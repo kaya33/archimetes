@@ -11,7 +11,7 @@ import os
 import sys
 
 from api.mongo_base import Mongo
-from api.user_tag import UP
+from api.user_tag import UserProfile
 from harpc.common import config
 from harpc import server
 from conf.config_default import configs
@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.DEBUG,
 log = logging.getLogger(__name__)
 
 mongo = Mongo('chaoge', 0)
-up = UP('chaoge', 0)
+up = UserProfile('chaoge', 0)
 mongo.connect()
 up.connect()
 

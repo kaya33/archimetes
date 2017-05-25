@@ -25,5 +25,5 @@ class Task(models.Model):
         )
 
 class UserTag(Document):
-    user_id = StringField(max_length=100)
+    user_id = StringField(max_length=100,required=True)
     user_tag = DictField()

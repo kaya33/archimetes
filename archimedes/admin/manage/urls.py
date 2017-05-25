@@ -35,4 +35,5 @@ urlpatterns = patterns('manage.views',
                        url(r"^getCache$", "getCache"),
                        url(r"^child$", "child"),
                        url(r"^flush_cache", "flush_cache"),
+                       url(r"^user_profile","user_profile"),
                        )

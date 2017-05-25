@@ -17,7 +17,8 @@
 # Eg. If you are using python and your blockServer is BlockServer.py
 # Call
 #
-python archimedes/rec_server.py
+nohup python -u archimedes/rec_server.py > server.log 2>&1 &ls
+
 #
 # or if CPP
 #
