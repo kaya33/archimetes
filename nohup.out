@@ -1,0 +1,5 @@
+python: can't open file 'rec_server.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "archimedes/rec_server.py", line 19, in <module>
+    from recommender.ttypes import *
+ImportError: No module named recommender.ttypes

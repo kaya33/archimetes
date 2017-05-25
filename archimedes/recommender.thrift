@@ -63,7 +63,8 @@ struct RecResponse {
 
 service Recommender {
 
-   string ping(),
+   string ping() throws (1: SystemException sys_exc,
+                           2: CodeException code_exc);
 
    RecResponse fetchRecByItem(1:ItemRequest req) throws (1: SystemException sys_exc,
                                                              2: CodeException code_exc);
