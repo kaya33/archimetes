@@ -27,7 +27,7 @@ class UserProfile(Mongo):
                         for k4, v4 in v3.items():
                             k4 = k4.replace('```', '.')
                             k4 = k4.replace('%^&', '$')
-                            result_dict[k1][k2][k3][k4] = sorted(v4.items(), key=lambda d: d[1], reverse=True)[:top]
+                        result_dict[k1][k2][k3] = sorted(v3.items(), key=lambda d: d[1], reverse=True)[:top]
 
         except KeyError as e:
             logging.error(e)
