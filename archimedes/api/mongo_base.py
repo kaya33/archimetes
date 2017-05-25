@@ -63,7 +63,7 @@ class Mongo():
         if len(search_json) == 0:
             logging.warning('[mongo]searching without term is not allowed')
             return iter([])
-        if self.read_db[collect_name]:
+        if self.read_db:
             query_data = self.read_db[collect_name]
             return query_data.find(search_json)
         else:
@@ -76,8 +76,8 @@ class Mongo():
             logging.warning('[mongo]insert err, data is empty')
             return []
 
-        query_obj = self.write_db[collect_name]
         try:
+            query_obj = self.write_db[collect_name]
             result = query_obj.insert_many(data)
             return result
         except Exception as e:
@@ -94,8 +94,8 @@ class Mongo():
 
     def expire(self, collect_name, sec):
 
-        query_obj = self.write_db[collect_name]
         try:
+            query_obj = self.write_db[collect_name]
             query_obj.create_index('update_time', expireAfterSeconds=sec)
         except Exception as e:
             logging.error('[mongo]create index err, collect_name:{0}, err:{1}'.format(collect_name, e))
@@ -106,12 +106,12 @@ class Mongo():
         if type(data) == dict:
             data = [data]
         requests = []
-        coll = self.write_db[collect_name]
-        for d in data:
-            #print d
-            requests.append(ReplaceOne({key: d[key]}, d, upsert=True))
 
         try:
+            coll = self.write_db[collect_name]
+            for d in data:
+                #print d
+                requests.append(ReplaceOne({key: d[key]}, d, upsert=True))
             res = coll.bulk_write(requests, ordered=False)
             return res.upserted_ids
         except Exception as e:
