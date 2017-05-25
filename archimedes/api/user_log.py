@@ -11,7 +11,7 @@ class UserLog(redis_base.Redis):
     def insert(self, user_id, ad_id, method='rec'):
 
         if method not in ['rec', 'view']:
-            logging.error('redis method is invalid')
+            logging.error('[user_log]redis method is invalid')
             return []
         # two weeks and 30 days
         if method == 'rec':

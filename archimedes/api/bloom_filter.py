@@ -59,7 +59,7 @@ class BloomFilter():
                 time_update = r.get('bloom_filter_update' + user_id)
                 if time_update and time_now - float(time_update) > self.rebuild_time:
                     self.build_from_redis(user_id)
-                r.set('bloom_filter_update' + user_id, time_now)
+                    r.set('bloom_filter_update' + user_id, time_now)
             except Exception as e:
                 logging.error('[bloom filter]save err, user_id:{0}, ad_id:{1}, err:{2}'.format(user_id, ad_id_list, e))
         else:
