@@ -4,6 +4,8 @@
 import requests
 import json
 
+from utils.utils import fn_timer
+
 class WebDataSource(object):
 
     def __init__(self,type ,url):
@@ -19,6 +21,7 @@ class WebDataSource(object):
         except Exception as e:
             print(e)
 
+@fn_timer
 def fetchKwData(data,headers=None):
     if headers is None:
         headers = {
