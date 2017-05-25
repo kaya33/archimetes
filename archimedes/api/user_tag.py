@@ -21,9 +21,13 @@ class UserProfile(Mongo):
 
                     result_dict[k1].setdefault(k2, {})
                     for k3, v3 in v2.items():
-                        k3 = k3.replace('```', '.')
-                        k3 = k3.replace('%^&', '$')
-                        result_dict[k1][k2][k3] = sorted(v3.items(), key=lambda d: d[1], reverse=True)[:top]
+
+                        result_dict[k1][k2].setdefault(k3, {})
+
+                        for k4, v4 in v3.items():
+                            k4 = k4.replace('```', '.')
+                            k4 = k4.replace('%^&', '$')
+                            result_dict[k1][k2][k3][k4] = sorted(v4.items(), key=lambda d: d[1], reverse=True)[:top]
 
         except KeyError as e:
             logging.error(e)

@@ -67,13 +67,13 @@ class Mongo():
             query_data = self.read_db[collect_name]
             return query_data.find(search_json)
         else:
-            logging.warning('[mongo]read without connect')
+            logging.warning('[mongo]reading without connect')
             return iter([])
 
     def insert(self, collect_name, data):
 
         if len(data) == 0:
-            logging.warning('insert data is empty')
+            logging.warning('[mongo]insert err, data is empty')
             return []
 
         query_obj = self.write_db[collect_name]
