@@ -126,7 +126,6 @@ def fetch_batch_userrec(user_id,first_category,second_category,city=None,size=3)
             kwdata = {"num": size,"city": city,"category": second_category,"tag": "_".join([x[0] for x in tmp_list_sample]),"weight":[x[1] for x in tmp_list_sample],"days": 270, 'cut':1000}
             user_profile_ad.extend(fetchKwData(kwdata))
         end = datetime.datetime.now()
-        print "get ad_list by user tag cost time %s sec\n" % (end - begin)
     except Exception as e:
         log.error("获取用户画像失败, {}".format(e))
         user_profile_ad = []
@@ -226,12 +225,15 @@ class RecommenderServerHandler(object):
             res.err_str = "用户画像数据为空"
             return res
 
-        combine_data = sample_sort(data)
+        combine_data = sample_sort(data)[:size]
 
-        # TODO bloom 过滤
-        bf = BloomFilter()
-        combine_data = bf.filter_ad_by_user(user_id, combine_data)
-        bf.save(user_id, [x[0] for x in combine_data][:size], 'rec')
+        try:
+            # TODO bloom 过滤
+            bf = BloomFilter()
+            combine_data = bf.filter_ad_by_user(user_id, combine_data)
+            bf.save(user_id, [x[0] for x in combine_data], 'rec')
+        except Exception as e:
+            print
 
         for obj in combine_data[:size]:
             res.data.append(OneRecResult(str(obj['rec_id']),'user_profile'))
